@@ -3,13 +3,11 @@
     <q-page-container>
       <q-page class="q-pa-md bg-grey-10 full-width">
         
-        <!-- ENCABEZADO CON CLASE CSS CORTA -->
         <div class="encabezado-principal">
           <div class="text-h4 text-bold">⚙️ TALLER DON EFRAÍN</div>
           <div class="text-subtitle1 text-grey-4 text-weight-bold">SISTEMA DE SERVICIO TÉCNICO</div>
         </div>
 
-        <!-- CONTROLES SUPERIORES -->
         <div class="row q-col-gutter-md q-mb-md items-center">
           <div class="col-12 col-md-5">
             <q-btn 
@@ -66,7 +64,6 @@
           </div>
         </div>
 
-        <!-- REJILLA DE 3 COLUMNAS -->
         <div v-else class="row q-col-gutter-md">
           <div 
             v-for="item in serviciosFiltrados" 

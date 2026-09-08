@@ -39,6 +39,9 @@
                 </span>
                 <q-badge color="orange-10" text-color="white" class="text-subtitle1 q-px-sm" :label="lista.length" />
               </div>
+
+              <q-btn v-if="esTecnico && lista.length > 0" label="BORRAR TODOS LOS PEDIDOS" icon="delete_sweep"
+                color="negative" class="text-bold q-mt-sm full-width" dense @click="confirmarLimpiarTodo" />
             </div>
           </div>
         </div>
@@ -149,12 +152,11 @@
                 <template v-slot:append>
                   <q-icon :name="isPassword ? 'visibility_off' : 'visibility'" class="cursor-pointer"
                     @click="isPassword = !isPassword" />
-                    
                 </template>
               </q-input>
+
               <div v-if="errorClave" class="text-negative text-caption q-mt-xs text-bold">
                 ⚠️ Contraseña incorrecta.
-                <p>la contraseña es 1234</p>
               </div>
             </q-card-section>
 
@@ -268,6 +270,25 @@
           </q-card>
         </q-dialog>
 
+        <q-dialog v-model="modalLimpiarTodo">
+          <q-card class="bg-grey-9 text-white style-modal">
+            <q-card-section class="bg-negative text-white text-h6 text-bold">
+              ⚠️ ¡ATENCIÓN!
+            </q-card-section>
+
+            <q-card-section class="text-body1">
+              ¿Estás seguro de que deseas eliminar <b>TODOS</b> los pedidos registrados? Esta acción borrará la lista
+              por
+              completo y no se puede deshacer.
+            </q-card-section>
+
+            <q-card-actions align="right" class="bg-black">
+              <q-btn flat label="Cancelar" color="grey-5" v-close-popup />
+              <q-btn flat label="Sí, borrar todo" color="negative" class="text-bold" @click="vaciarLista" />
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
+
       </q-page>
     </q-page-container>
   </q-layout>
@@ -284,11 +305,13 @@ const CLAVE_TECNICO = "1234";
 
 const modal = ref(false);
 const eliminar = ref(false);
+const modalLimpiarTodo = ref(false);
 const editando = ref(false);
 const posicion = ref(null);
 
 const modalLogin = ref(false);
 const claveIngresada = ref("");
+const isPassword = ref(true);
 const errorClave = ref(false);
 
 const formulario = ref({
@@ -344,6 +367,7 @@ function verificarClave() {
     modalLogin.value = false;
     claveIngresada.value = "";
     errorClave.value = false;
+    isPassword.value = true;
   } else {
     errorClave.value = true;
   }
@@ -426,6 +450,15 @@ function eliminarRegistro() {
   }
   eliminar.value = false;
   posicion.value = null;
+}
+
+function confirmarLimpiarTodo() {
+  modalLimpiarTodo.value = true;
+}
+
+function vaciarLista() {
+  lista.value = [];
+  modalLimpiarTodo.value = false;
 }
 
 function colorEstado(estado) {

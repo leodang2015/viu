@@ -1,308 +1,269 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-page-container>
-      <q-page class="q-pa-md bg-grey-10 full-width">
-        
-        <div class="encabezado-principal">
-          <div class="text-h4 text-bold">⚙️ TALLER DON EFRAÍN</div>
-          <div class="text-subtitle1 text-grey-4 text-weight-bold">SISTEMA DE SERVICIO TÉCNICO</div>
+      <q-page class="q-pa-md bg-grey-10">
+
+        <div class="q-mb-md bg-black text-amber-14 q-pa-md rounded-borders sombra borde">
+          <div class="row items-center justify-between">
+            <div>
+              <div class="text-h4 text-bold">⚙️ TALLER DON EFRAÍN</div>
+              <div class="text-subtitle1 text-grey-4 text-weight-bold">
+                SISTEMA DE SERVICIO TÉCNICO
+              </div>
+            </div>
+
+            <div class="q-mt-sm-device">
+              <q-chip v-if="esTecnico" color="positive" text-color="white" icon="admin_panel_settings"
+                class="text-bold q-mr-sm">
+                TÉCNICO ACTIVO
+              </q-chip>
+
+              <q-btn v-if="!esTecnico" label="MODO TÉCNICO" icon="lock" color="amber-14" text-color="black"
+                class="text-bold" @click="modalLogin = true" />
+              <q-btn v-else label="SALIR" icon="logout" color="negative" class="text-bold" @click="esTecnico = false" />
+            </div>
+          </div>
         </div>
 
         <div class="row q-col-gutter-md q-mb-md items-center">
-          <div class="col-12 col-md-5">
-            <q-btn 
-              label="INGRESAR NUEVO EQUIPO" 
-              icon="build" 
-              color="amber-14" 
-              text-color="black"
-              class="full-width text-bold shadow-4" 
-              size="lg"
-              @click="abrirModalNuevo" 
-            />
+          <div class="col-12 col-md-8">
+            <q-btn label="INGRESAR NUEVO EQUIPO" icon="build" color="amber-14" text-color="black"
+              class="full-width text-bold" size="lg" @click="abrirNuevo" />
           </div>
 
           <div class="col-12 col-md-4">
-            <q-input 
-              v-model="textoBusqueda" 
-              placeholder="Buscar por cliente, marca o modelo..." 
-              dark 
-              outlined 
-              dense 
-              color="amber-14"
-              clearable
-            >
-              <template v-slot:prepend>
-                <q-icon name="search" color="amber-14" />
-              </template>
-            </q-input>
-          </div>
-
-          <div class="col-12 col-md-3 row justify-between items-center">
-            <div class="caja-contador col-8">
-              <span class="text-caption text-bold text-grey-3 q-mr-xs">TOTAL:</span>
-              <q-badge color="orange-10" text-color="white" class="text-bold" :label="serviciosFiltrados.length" />
+            <div class="bg-grey-9 text-white q-pa-md rounded-borders borde">
+              <div class="row justify-between items-center">
+                <span class="text-subtitle1 text-bold">
+                  EQUIPOS EN TALLER
+                </span>
+                <q-badge color="orange-10" text-color="white" class="text-subtitle1 q-px-sm" :label="lista.length" />
+              </div>
             </div>
-            
-            <q-btn 
-              icon="delete_sweep" 
-              color="negative" 
-              flat 
-              round 
-              dense 
-              :disable="listaServicios.length === 0"
-              @click="modalLimpiarTodo = true"
-            >
-              <q-tooltip>Vaciar todo el registro</q-tooltip>
-            </q-btn>
           </div>
         </div>
 
-        <div v-if="serviciosFiltrados.length === 0" class="mensaje-vacio">
+        <div v-if="lista.length === 0" class="text-center text-grey-5 q-pa-xl bg-grey-9 rounded-borders borde">
           <q-icon name="handyman" size="4rem" color="amber-14" />
           <div class="text-h6 q-mt-sm text-bold">
-            {{ listaServicios.length === 0 ? 'Sin equipos registrados.' : 'No se encontraron coincidencias.' }}
+            No hay trabajos registrados
           </div>
         </div>
 
         <div v-else class="row q-col-gutter-md">
-          <div 
-            v-for="item in serviciosFiltrados" 
-            :key="item.id" 
-            class="col-12 col-sm-6 col-md-4"
-          >
-            <q-card flat class="bg-grey-9 text-white borde-caja full-height column justify-between">
-              
-              <div>
-                <div :class="{
-                  'bg-negative': item.estadoPago === 'Pendiente',
-                  'bg-warning text-black': item.estadoPago === 'Abono',
-                  'bg-positive': item.estadoPago === 'Pagado'
-                }" class="q-pa-xs text-center text-weight-bolder text-uppercase text-caption">
-                  PAGO: {{ item.estadoPago }} (${{ item.precio }})
+          <div v-for="(item, index) in lista" :key="item.id" class="col-12 col-sm-6 col-md-4">
+            <q-card class="bg-grey-9 text-white borde alto">
+
+              <div :class="{
+                'bg-negative': item.estadoPago === 'Pendiente',
+                'bg-warning text-black': item.estadoPago === 'Abono',
+                'bg-positive': item.estadoPago === 'Pagado'
+              }" class="q-pa-sm text-center text-bold text-uppercase">
+                PAGO: {{ item.estadoPago || "Sin definir" }}
+                <span v-if="item.estadoPago === 'Abono'"> (${{ item.abono || 0 }} / Total: ${{ item.precio || 0
+                  }})</span>
+                <span v-else-if="item.precio"> - ${{ item.precio }}</span>
+              </div>
+
+              <q-card-section>
+                <div class="row items-center justify-between q-mb-sm">
+                  <div class="text-h6 text-bold text-amber-14">
+                    {{ item.cliente || "Cliente sin nombre" }}
+                  </div>
+
+                  <q-chip dense square text-color="white" :color="colorEstado(item.estadoEquipo)"
+                    :icon="iconoEstado(item.estadoEquipo)">
+                    {{ item.estadoEquipo }}
+                  </q-chip>
                 </div>
 
-                <q-card-section class="q-pa-sm">
-                  
-                  <div class="row items-center justify-between">
-                    <div class="text-subtitle1 text-bold text-amber-14 ellipsis" style="max-width: 60%;">
-                      {{ item.cliente }}
-                    </div>
-                    
-                    <q-chip 
-                      dense 
-                      square
-                      :color="item.estadoEquipo === 'Entregado' ? 'grey-8' : item.estadoEquipo === 'Listo para entregar' ? 'positive' : 'orange-9'" 
-                      text-color="white"
-                      :icon="item.estadoEquipo === 'Entregado' ? 'check_circle' : 'engineering'"
-                    >
-                      {{ item.estadoEquipo }}
+                <div class="text-body2 text-grey-4 q-mb-sm">
+                  Fecha: {{ item.fechaHora }}
+                </div>
+
+                <q-separator dark class="q-my-sm" />
+
+                <div class="text-body1"><b>Marca:</b> {{ item.marca || "Sin definir" }}</div>
+                <div class="text-body1"><b>Modelo:</b> {{ item.modelo || "Sin definir" }}</div>
+
+                <div class="text-body1 q-mt-xs">
+                  <b>Reparaciones / Fallos:</b>
+                  <div v-if="Array.isArray(item.tipoReparacion) && item.tipoReparacion.length > 0"
+                    class="q-mt-xs row q-gutter-xs">
+                    <q-chip v-for="(fallo, fIdx) in item.tipoReparacion" :key="fIdx" dense color="amber-14"
+                      text-color="black" class="text-weight-bold">
+                      {{ fallo }}
                     </q-chip>
                   </div>
+                  <span v-else> {{ item.tipoReparacion || "Sin definir" }}</span>
+                </div>
 
-                  <div class="text-caption text-grey-5">
-                    <b>Fecha:</b> {{ item.fechaHora }}
+                <div class="text-body1 q-mt-xs"><b>Técnico:</b> {{ item.tecnico || "Sin definir" }}</div>
+                <div class="text-body1"><b>Método de pago:</b> {{ item.metodoPago || "Sin definir" }}</div>
+
+                <div v-if="item.observaciones"
+                  class="text-body1 q-mt-sm bg-black text-amber-5 q-pa-sm rounded-borders nota">
+                  <b>Observaciones:</b> {{ item.observaciones }}
+                </div>
+
+                <div v-if="item.estadoEquipo === 'Entregado'"
+                  class="q-mt-md bg-black q-pa-sm rounded-borders text-center">
+                  <div class="text-subtitle2 text-bold text-amber-14">
+                    ⭐ Calificación del cliente
                   </div>
-
-                  <q-separator dark class="q-my-xs" />
-
-                  <div class="text-body2"><b>Equipo:</b> <span class="text-amber-11">{{ item.marca }} {{ item.modelo }}</span></div>
-                  <div class="text-body2"><b>Falla:</b> {{ item.tipoReparacion }}</div>
-                  <div class="text-caption text-grey-4"><b>Técnico:</b> {{ item.tecnico }}</div>
-                  <div class="text-caption text-grey-4"><b>Pago:</b> {{ item.metodoPago }}</div>
-
-                  <div v-if="item.observaciones" class="text-caption q-mt-xs bg-black text-amber-5 q-pa-xs rounded-borders nota-item">
-                    <b>Notas:</b> {{ item.observaciones }}
+                  <q-rating v-model="item.calificacion" size="1.8em" color="amber-14" :readonly="esTecnico" :max="5" />
+                  <div v-if="!esTecnico" class="text-caption text-grey-4">
+                    Haz clic en las estrellas para calificar
                   </div>
+                </div>
 
-                  <div v-if="item.estadoEquipo === 'Entregado'" class="q-mt-xs row items-center">
-                    <span class="text-caption q-mr-xs text-bold">Calificación:</span>
-                    <q-rating v-model="item.calificacion" size="1.2em" color="amber-14" readonly />
-                  </div>
+              </q-card-section>
 
-                </q-card-section>
-              </div>
+              <q-separator dark />
 
-              <div>
-                <q-separator dark />
-                <q-card-actions align="right" class="q-pa-xs bg-black">
-                  <q-btn flat dense color="amber-14" icon="edit" label="Editar" @click="abrirModalEditar(item.id)" />
-                  <q-btn flat dense color="negative" icon="delete" label="Borrar" @click="confirmarBorrado(item.id)" />
-                </q-card-actions>
-              </div>
+              <q-card-actions align="right" class="bg-black">
+                <q-btn v-if="item.estadoEquipo !== 'Entregado'" flat color="amber-14" icon="edit" label="Editar"
+                  @click="abrirEditar(index)" />
+
+                <q-btn v-if="item.estadoEquipo !== 'Entregado'" flat color="negative" icon="delete" label="Eliminar"
+                  @click="confirmarEliminar(index)" />
+
+                <span v-if="item.estadoEquipo === 'Entregado'" class="text-positive text-bold q-pa-sm text-caption">
+                  ✓ REGISTRO CERRADO Y ENTREGADO
+                </span>
+              </q-card-actions>
 
             </q-card>
           </div>
         </div>
 
-        <!-- MODAL FORMULARIO -->
-        <q-dialog v-model="modalAbierto" persistent>
-          <q-card style="width: 100%; max-width: 650px;" class="bg-grey-9 text-white">
-            
-            <q-card-section class="row items-center bg-black text-amber-14 q-pa-sm borde-arriba">
-              <div class="text-subtitle1 text-bold">{{ modoEdicion ? '⚙️ EDITAR DATOS' : '⚙️ REGISTRAR DATOS' }}</div>
-              <q-space />
-              <q-btn icon="close" flat round dense v-close-popup color="amber-14" />
+        <q-dialog v-model="modalLogin">
+          <q-card class="bg-grey-9 text-white style-modal">
+            <q-card-section class="bg-black text-amber-14 borde">
+              <div class="text-h6 text-bold">🔐 INGRESO MODO TÉCNICO</div>
             </q-card-section>
 
             <q-card-section class="q-pa-md">
-              <q-form @submit="guardarRegistro" class="q-gutter-y-sm">
-                
-                <q-input 
-                  v-model="formulario.cliente" 
-                  label="Nombre del Cliente *" 
-                  dark outlined dense 
-                  color="amber-14"
-                  :rules="[val => !!val || 'Requerido']"
-                />
-
-                <div class="row q-col-gutter-xs">
-                  <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.marca" 
-                      :options="opcionesMarca" 
-                      label="Marca *" 
-                      dark outlined dense 
-                      color="amber-14"
-                      :rules="[val => !!val || 'Requerido']"
-                    />
-                  </div>
-                  <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.modelo" 
-                      :options="opcionesModelo" 
-                      label="Modelo *" 
-                      dark outlined dense 
-                      color="amber-14"
-                      :rules="[val => !!val || 'Requerido']"
-                    />
-                  </div>
-                </div>
-
-                <div class="row q-col-gutter-xs">
-                  <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.tipoReparacion" 
-                      :options="opcionesReparacion" 
-                      label="Tipo Reparación *" 
-                      dark outlined dense 
-                      color="amber-14"
-                      :rules="[val => !!val || 'Requerido']"
-                    />
-                  </div>
-                  <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.tecnico" 
-                      :options="listaTecnicos" 
-                      label="Técnico Encargado *" 
-                      dark outlined dense 
-                      color="amber-14"
-                      :rules="[val => !!val || 'Requerido']"
-                    />
-                  </div>
-                </div>
-
-                <div class="row q-col-gutter-xs">
-                  <div class="col-12 col-sm-6">
-                    <q-input 
-                      v-model.number="formulario.precio" 
-                      label="Precio ($) *" 
-                      type="number" 
-                      dark outlined dense 
-                      color="amber-14"
-                      :rules="[val => val > 0 || 'Inválido']"
-                    />
-                  </div>
-                  <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.metodoPago" 
-                      :options="opcionesMetodoPago" 
-                      label="Método Pago *" 
-                      dark outlined dense 
-                      color="amber-14"
-                      :rules="[val => !!val || 'Requerido']"
-                    />
-                  </div>
-                </div>
-
-                <div class="row q-col-gutter-xs">
-                  <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.estadoPago" 
-                      :options="opcionesEstadoPago" 
-                      label="Estado Pago *" 
-                      dark outlined dense 
-                      color="amber-14"
-                      :rules="[val => !!val || 'Requerido']"
-                    />
-                  </div>
-                  <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.estadoEquipo" 
-                      :options="opcionesEstadoEquipo" 
-                      label="Estado Equipo *" 
-                      dark outlined dense 
-                      color="amber-14"
-                      :rules="[val => !!val || 'Requerido']"
-                    />
-                  </div>
-                </div>
-
-                <div v-if="formulario.estadoEquipo === 'Entregado'" class="q-my-xs text-center bg-black q-pa-xs rounded-borders">
-                  <div class="text-caption text-bold text-amber-14">Calificación del Cliente:</div>
-                  <q-rating v-model="formulario.calificacion" size="2em" color="amber-14" :max="5" />
-                </div>
-
-                <q-input 
-                  v-model="formulario.observaciones" 
-                  label="Observaciones" 
-                  type="textarea" 
-                  rows="2" 
-                  dark outlined dense 
-                  color="amber-14"
-                />
-
-                <div class="row justify-end q-mt-md">
-                  <q-btn label="Cancelar" color="grey-6" flat v-close-popup class="q-mr-xs" />
-                  <q-btn :label="modoEdicion ? 'Actualizar' : 'Guardar'" type="submit" color="amber-14" text-color="black" class="text-bold" />
-                </div>
-
-              </q-form>
-            </q-card-section>
-          </q-card>
-        </q-dialog>
-
-        <!-- MODAL ELIMINAR UNO -->
-        <q-dialog v-model="modalEliminar">
-          <q-card style="width: 100%; max-width: 350px;" class="bg-grey-9 text-white">
-            <q-card-section class="bg-negative text-white q-pa-sm text-bold">
-              Eliminar Registro
-            </q-card-section>
-            
-            <q-card-section class="q-pa-md">
-              <div class="text-body2">¿Desea borrar este equipo del taller?</div>
+              <q-input v-model="claveIngresada" :type="isPassword ? 'password' : 'text'" label="Contraseña" dark
+                outlined dense color="amber-14" @keyup.enter="verificarClave">
+                <template v-slot:append>
+                  <q-icon :name="isPassword ? 'visibility_off' : 'visibility'" class="cursor-pointer"
+                    @click="isPassword = !isPassword" />
+                    
+                </template>
+              </q-input>
+              <div v-if="errorClave" class="text-negative text-caption q-mt-xs text-bold">
+                ⚠️ Contraseña incorrecta.
+                <p>la contraseña es 1234</p>
+              </div>
             </q-card-section>
 
             <q-card-actions align="right" class="bg-black">
               <q-btn flat label="Cancelar" color="grey-5" v-close-popup />
-              <q-btn flat label="Eliminar" color="negative" class="text-bold" @click="eliminarDefinitivo" />
+              <q-btn flat label="Ingresar" color="amber-14" class="text-bold" @click="verificarClave" />
             </q-card-actions>
           </q-card>
         </q-dialog>
 
-        <!-- MODAL LIMPIAR TODO -->
-        <q-dialog v-model="modalLimpiarTodo">
-          <q-card style="width: 100%; max-width: 350px;" class="bg-grey-9 text-white">
-            <q-card-section class="bg-negative text-white q-pa-sm text-bold">
-              ⚠️ Vaciar Registro Completo
+        <q-dialog v-model="modal">
+          <q-card class="bg-grey-9 text-white formulario">
+
+            <q-card-section class="row items-center bg-black text-amber-14 borde">
+              <div class="text-h6 text-bold">
+                {{ editando ? "MODIFICAR REGISTRO" : "REGISTRAR TRABAJO" }}
+              </div>
+              <q-space />
+              <q-btn icon="close" flat round dense v-close-popup color="amber-14" />
             </q-card-section>
-            
-            <q-card-section class="q-pa-md">
-              <div class="text-body2">¿Estás seguro de eliminar TODOS los equipos registrados? Esta acción no se puede deshacer.</div>
+
+            <q-card-section>
+              <q-form @submit.prevent="guardar">
+
+                <q-input v-model="formulario.cliente" label="Nombre del cliente" dark outlined color="amber-14"
+                  class="q-mb-md" />
+
+                <div class="row q-col-gutter-md">
+                  <div class="col-12 col-sm-6">
+                    <q-select v-model="formulario.marca" :options="marcas" label="Marca" dark outlined
+                      color="amber-14" />
+                  </div>
+
+                  <div class="col-12 col-sm-6">
+                    <q-select v-model="formulario.modelo" :options="modelos" label="Modelo" dark outlined
+                      color="amber-14" />
+                  </div>
+                </div>
+
+                <div class="row q-col-gutter-md q-mt-sm">
+                  <div class="col-12 col-sm-6">
+                    <q-select v-model="formulario.tipoReparacion" :options="reparaciones"
+                      label="Tipo de reparación (Múltiple)" multiple use-chips dark outlined color="amber-14" />
+                  </div>
+
+                  <div class="col-12 col-sm-6">
+                    <q-select v-model="formulario.tecnico" :options="tecnicos" label="Técnico" dark outlined
+                      color="amber-14" />
+                  </div>
+                </div>
+
+                <div class="row q-col-gutter-md q-mt-sm">
+                  <div class="col-12 col-sm-6">
+                    <q-input v-model.number="formulario.precio" label="Precio" type="number" dark outlined
+                      color="amber-14" />
+                  </div>
+
+                  <div class="col-12 col-sm-6">
+                    <q-select v-model="formulario.metodoPago" :options="metodos" label="Método de pago" dark outlined
+                      color="amber-14" />
+                  </div>
+                </div>
+
+                <div class="row q-col-gutter-md q-mt-sm">
+                  <div class="col-12 col-sm-6">
+                    <q-select v-model="formulario.estadoPago" :options="estadosPago" label="Estado del pago" dark
+                      outlined color="amber-14" />
+                  </div>
+
+                  <div class="col-12 col-sm-6">
+                    <q-select v-model="formulario.estadoEquipo" :options="opcionesEstadoEquipoFiltradas"
+                      label="Estado del equipo" dark outlined color="amber-14" />
+                    <div v-if="!esTecnico" class="text-caption text-amber-5 q-mt-xs">
+                      🔒 Se requiere Modo Técnico para marcar como 'Entregado'.
+                    </div>
+                  </div>
+                </div>
+
+                <q-input v-if="formulario.estadoPago === 'Abono'" v-model.number="formulario.abono"
+                  label="Valor del abono" type="number" dark outlined color="amber-14" class="q-mt-md" />
+
+                <q-input v-model="formulario.observaciones" label="Observaciones" type="textarea" rows="3" dark outlined
+                  color="amber-14" class="q-mt-md" />
+
+                <div class="row justify-end q-mt-lg">
+                  <q-btn label="Cancelar" color="grey-6" flat v-close-popup class="q-mr-sm" />
+                  <q-btn :label="editando ? 'Actualizar' : 'Guardar'" type="submit" color="amber-14" text-color="black"
+                    class="text-bold" />
+                </div>
+
+              </q-form>
+            </q-card-section>
+
+          </q-card>
+        </q-dialog>
+
+        <q-dialog v-model="eliminar">
+          <q-card class="bg-grey-9 text-white style-modal">
+            <q-card-section class="bg-negative text-white text-h6">
+              Confirmar eliminación
+            </q-card-section>
+
+            <q-card-section class="text-body1">
+              ¿Deseas eliminar este registro?
             </q-card-section>
 
             <q-card-actions align="right" class="bg-black">
               <q-btn flat label="Cancelar" color="grey-5" v-close-popup />
-              <q-btn flat label="Vaciar Todo" color="negative" class="text-bold" @click="vaciarListaCompleta" />
+              <q-btn flat label="Eliminar" color="negative" class="text-bold" @click="eliminarRegistro" />
             </q-card-actions>
           </q-card>
         </q-dialog>
@@ -316,161 +277,196 @@
 import { ref, computed } from "vue";
 import { useLocalStorage } from "@vueuse/core";
 
-const listaServicios = useLocalStorage("taller_don_efrain_mecanico", []);
+const lista = useLocalStorage("taller_don_efrain", []);
+const esTecnico = useLocalStorage("taller_don_efrain_es_tecnico", false);
 
-const modalAbierto = ref(false);
-const modalEliminar = ref(false);
-const modalLimpiarTodo = ref(false);
-const modoEdicion = ref(false);
-const idSeleccionado = ref(null);
-const textoBusqueda = ref("");
+const CLAVE_TECNICO = "1234";
+
+const modal = ref(false);
+const eliminar = ref(false);
+const editando = ref(false);
+const posicion = ref(null);
+
+const modalLogin = ref(false);
+const claveIngresada = ref("");
+const errorClave = ref(false);
 
 const formulario = ref({
   cliente: "",
   marca: null,
   modelo: null,
-  tipoReparacion: null,
+  tipoReparacion: [],
   tecnico: null,
   precio: null,
   metodoPago: null,
   estadoPago: null,
-  estadoEquipo: null,
+  abono: null,
+  estadoEquipo: "Recibido",
   calificacion: 0,
   observaciones: "",
   fechaHora: ""
 });
 
-const opcionesMarca = ["Apple", "Samsung", "Xiaomi", "Motorola", "Huawei", "Realme", "OPPO", "Honor"];
-const opcionesModelo = [
+const marcas = [
+  "Apple", "Samsung", "Xiaomi", "Motorola",
+  "Huawei", "Realme", "OPPO", "Honor"
+];
+
+const modelos = [
   "iPhone 12", "iPhone 13", "iPhone 14", "iPhone 15",
   "Samsung A15", "Samsung A54", "Samsung S23", "Samsung S24",
   "Xiaomi Redmi Note 10", "Xiaomi Redmi Note 12", "Xiaomi 13 Pro",
-  "Motorola Moto G84", "Motorola Edge 40",
-  "Huawei P60 Pro", "Realme GT Neo 5", "OPPO Reno 10", "Honor Magic 5 Pro"
+  "Motorola Moto G84", "Motorola Edge 40", "Huawei P60 Pro",
+  "Realme GT Neo 5", "OPPO Reno 10", "Honor Magic 5 Pro"
 ];
-const opcionesReparacion = [
-  'Cambio de pantalla', 'Cambio de batería', 'Cambio de pin de carga',
-  'Liberación', 'Mantenimiento de software', 'Cambio de flex', 'Otros'
-];
-const listaTecnicos = [
-  'Don Efraín', 'Omar Leonardo Dangond Rueda', 'Javier Esneider Pinto Rodríguez'
-];
-const opcionesMetodoPago = ['Efectivo', 'Transferencia', 'Tarjeta'];
-const opcionesEstadoPago = ['Pagado', 'Pendiente', 'Abono'];
-const opcionesEstadoEquipo = ['Recibido', 'En reparación', 'Listo para entregar', 'Entregado'];
 
-const serviciosFiltrados = computed(() => {
-  if (!textoBusqueda.value) return listaServicios.value;
-  const busqueda = textoBusqueda.value.toLowerCase().trim();
-  return listaServicios.value.filter(item => {
-    return (
-      (item.cliente && item.cliente.toLowerCase().includes(busqueda)) ||
-      (item.marca && item.marca.toLowerCase().includes(busqueda)) ||
-      (item.modelo && item.modelo.toLowerCase().includes(busqueda))
-    );
-  });
+const reparaciones = [
+  "Cambio de pantalla", "Cambio de batería", "Cambio de pin de carga",
+  "Liberación", "Mantenimiento de software", "Cambio de flex", "Otros"
+];
+
+const tecnicos = [
+  "Don Efraín", "Omar Leonardo Dangond Rueda", "Javier Esneider Pinto Rodríguez"
+];
+
+const metodos = ["Efectivo", "Transferencia", "Tarjeta"];
+const estadosPago = ["Pagado", "Pendiente", "Abono"];
+const estadosEquipo = ["Recibido", "En reparación", "Listo para entregar", "Entregado"];
+
+const opcionesEstadoEquipoFiltradas = computed(() => {
+  if (esTecnico.value) return estadosEquipo;
+  return estadosEquipo.filter(e => e !== "Entregado");
 });
 
-function abrirModalNuevo() {
-  modoEdicion.value = false;
-  formulario.value = {
+function verificarClave() {
+  if (claveIngresada.value === CLAVE_TECNICO) {
+    esTecnico.value = true;
+    modalLogin.value = false;
+    claveIngresada.value = "";
+    errorClave.value = false;
+  } else {
+    errorClave.value = true;
+  }
+}
+
+function nuevoFormulario() {
+  return {
     cliente: "",
     marca: null,
     modelo: null,
-    tipoReparacion: null,
+    tipoReparacion: [],
     tecnico: null,
     precio: null,
     metodoPago: null,
     estadoPago: null,
+    abono: null,
     estadoEquipo: "Recibido",
     calificacion: 0,
     observaciones: "",
-    fechaHora: new Date().toLocaleString('es-CO')
+    fechaHora: new Date().toLocaleString("es-CO")
   };
-  modalAbierto.value = true;
 }
 
-function abrirModalEditar(id) {
-  modoEdicion.value = true;
-  idSeleccionado.value = id;
-  const elemento = listaServicios.value.find(item => item.id === id);
-  if (elemento) {
-    formulario.value = JSON.parse(JSON.stringify(elemento));
-    modalAbierto.value = true;
+function abrirNuevo() {
+  editando.value = false;
+  posicion.value = null;
+  formulario.value = nuevoFormulario();
+  modal.value = true;
+}
+
+function abrirEditar(index) {
+  if (lista.value[index].estadoEquipo === "Entregado") return;
+
+  editando.value = true;
+  posicion.value = index;
+
+  const datos = JSON.parse(JSON.stringify(lista.value[index]));
+  if (typeof datos.tipoReparacion === 'string') {
+    datos.tipoReparacion = [datos.tipoReparacion];
+  } else if (!Array.isArray(datos.tipoReparacion)) {
+    datos.tipoReparacion = [];
   }
+
+  formulario.value = datos;
+  modal.value = true;
 }
 
-function guardarRegistro() {
-  if (modoEdicion.value) {
-    const indice = listaServicios.value.findIndex(item => item.id === idSeleccionado.value);
-    if (indice !== -1) {
-      listaServicios.value[indice] = { ...formulario.value };
-    }
+function guardar() {
+  if (formulario.value.estadoPago !== "Abono") {
+    formulario.value.abono = null;
+  }
+
+  if (editando.value) {
+    lista.value[posicion.value] = {
+      ...lista.value[posicion.value],
+      ...formulario.value
+    };
   } else {
-    listaServicios.value.push({
+    lista.value.push({
       id: Date.now(),
       ...formulario.value
     });
   }
-  modalAbierto.value = false;
+
+  modal.value = false;
 }
 
-function confirmarBorrado(id) {
-  idSeleccionado.value = id;
-  modalEliminar.value = true;
+function confirmarEliminar(index) {
+  if (lista.value[index].estadoEquipo === "Entregado") return;
+  posicion.value = index;
+  eliminar.value = true;
 }
 
-function eliminarDefinitivo() {
-  listaServicios.value = listaServicios.value.filter(item => item.id !== idSeleccionado.value);
-  modalEliminar.value = false;
+function eliminarRegistro() {
+  if (
+    posicion.value !== null &&
+    lista.value[posicion.value].estadoEquipo !== "Entregado"
+  ) {
+    lista.value.splice(posicion.value, 1);
+  }
+  eliminar.value = false;
+  posicion.value = null;
 }
 
-function vaciarListaCompleta() {
-  listaServicios.value = [];
-  modalLimpiarTodo.value = false;
+function colorEstado(estado) {
+  if (estado === "Entregado") return "grey-8";
+  if (estado === "Listo para entregar") return "positive";
+  if (estado === "En reparación") return "orange-9";
+  return "blue-grey-8";
+}
+
+function iconoEstado(estado) {
+  if (estado === "Entregado") return "check_circle";
+  if (estado === "En reparación") return "engineering";
+  return "build";
 }
 </script>
 
 <style scoped>
-/* AGRUPACIÓN DE CLASES LARGAS EN CLASES LIMPIAS */
-.encabezado-principal {
-  margin-bottom: 16px;
-  text-align: center;
-  background-color: #000000;
-  color: #ffb300;
-  padding: 16px;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+.borde {
+  border: 1px solid #424242;
   border-bottom: 3px solid #ffb300;
 }
 
-.caja-contador {
-  background-color: #212121;
-  color: #ffffff;
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid #424242;
-  display: flex;
-  align-items: center;
+.sombra {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.mensaje-vacio {
-  text-align: center;
-  color: #9e9e9e;
-  padding: 48px;
-  background-color: #212121;
-  border-radius: 4px;
+.alto {
+  height: 100%;
 }
 
-.borde-arriba {
-  border-bottom: 3px solid #ffb300;
-}
-
-.borde-caja {
-  border: 1px solid #424242;
-}
-
-.nota-item {
+.nota {
   border-left: 3px solid #ffb300;
+}
+
+.formulario {
+  width: 100%;
+  max-width: 700px;
+}
+
+.style-modal {
+  width: 100%;
+  max-width: 400px;
 }
 </style>

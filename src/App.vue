@@ -57,14 +57,17 @@
           <div v-for="(item, index) in lista" :key="item.id" class="col-12 col-sm-6 col-md-4">
             <q-card class="bg-grey-9 text-white borde alto">
 
+              <!-- BARRA SUPERIOR CON ABONO, TOTAL Y FALTANTE -->
               <div :class="{
                 'bg-negative': item.estadoPago === 'Pendiente',
                 'bg-warning text-black': item.estadoPago === 'Abono',
                 'bg-positive': item.estadoPago === 'Pagado'
               }" class="q-pa-sm text-center text-bold text-uppercase">
                 PAGO: {{ item.estadoPago || "Sin definir" }}
-                <span v-if="item.estadoPago === 'Abono'"> ({{ formatoMoneda(item.abono) }} / Total: {{
-                  formatoMoneda(item.precio) }})</span>
+                <span v-if="item.estadoPago === 'Abono'">
+                  ({{ formatoMoneda(item.abono) }} / TOTAL: {{ formatoMoneda(item.precio) }} - FALTA: {{
+                    formatoMoneda((item.precio || 0) - (item.abono || 0)) }})
+                </span>
                 <span v-else-if="item.precio"> - {{ formatoMoneda(item.precio) }}</span>
               </div>
 
@@ -104,8 +107,14 @@
                 <div class="text-body1 q-mt-xs"><b>Técnico:</b> {{ item.tecnico || "Sin definir" }}</div>
                 <div class="text-body1"><b>Método de pago:</b> {{ item.metodoPago || "Sin definir" }}</div>
 
-                <div v-if="item.estadoPago === 'Abono'" class="text-body1 q-mt-xs text-negative text-bold">
-                  <b>Falta por pagar:</b> {{ formatoMoneda((item.precio || 0) - (item.abono || 0)) }}
+                <!-- BLOQUE INFERIOR DE DETALLE DE ABONO -->
+                <div v-if="item.estadoPago === 'Abono'" class="q-mt-sm q-pa-xs rounded-borders bg-black text-white">
+                  <div class="text-body1 text-warning">
+                    <b>Abonado:</b> {{ formatoMoneda(item.abono) }}
+                  </div>
+                  <div class="text-body1 text-negative text-bold">
+                    <b>Falta por pagar:</b> {{ formatoMoneda((item.precio || 0) - (item.abono || 0)) }}
+                  </div>
                 </div>
 
                 <div v-if="item.observaciones"
@@ -251,13 +260,18 @@
                   </div>
                 </div>
 
-                <q-input v-if="formulario.estadoPago === 'Abono'" v-model.number="formulario.abono"
-                  label="Valor del abono *" type="number" dark outlined color="amber-14" class="q-mt-md" lazy-rules
-                  :rules="[
-                    val => (val !== null && val !== '' && val !== undefined) || 'Ingresa el valor del abono',
-                    val => val > 0 || 'El abono debe ser mayor a 0',
-                    val => val < formulario.precio || 'El abono debe ser menor al precio total'
-                  ]" />
+                <div v-if="formulario.estadoPago === 'Abono'" class="q-mt-md">
+                  <q-input v-model.number="formulario.abono" label="Valor del abono *" type="number" dark outlined
+                    color="amber-14" lazy-rules :rules="[
+                      val => (val !== null && val !== '' && val !== undefined) || 'Ingresa el valor del abono',
+                      val => val > 0 || 'El abono debe ser mayor a 0',
+                      val => val < formulario.precio || 'El abono debe ser menor al precio total'
+                    ]" />
+                  <div v-if="formulario.precio && formulario.abono > 0 && formulario.abono < formulario.precio"
+                    class="text-caption text-warning q-mt-xs text-bold">
+                    💡 Saldo Faltante: {{ formatoMoneda(formulario.precio - formulario.abono) }}
+                  </div>
+                </div>
 
                 <q-input v-model="formulario.observaciones" label="Observaciones" type="textarea" rows="3" dark outlined
                   color="amber-14" class="q-mt-md" />

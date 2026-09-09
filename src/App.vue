@@ -156,7 +156,7 @@
               </q-input>
 
               <div v-if="errorClave" class="text-negative text-caption q-mt-xs text-bold">
-                ⚠️ Contraseña incorrecta.LA CONTRASEÑA ES {{ CLAVE_TECNICO }}
+                ⚠️ Contraseña incorrecta. LA CONTRASEÑA ES {{ CLAVE_TECNICO }}
               </div>
             </q-card-section>
 
@@ -181,65 +181,164 @@
             <q-card-section>
               <q-form @submit.prevent="guardar">
 
-                <q-input v-model="formulario.cliente" label="Nombre del cliente" dark outlined color="amber-14"
-                  class="q-mb-md" />
+                <q-input 
+                  v-model="formulario.cliente" 
+                  label="Nombre del cliente *" 
+                  dark 
+                  outlined 
+                  color="amber-14"
+                  class="q-mb-md" 
+                  lazy-rules
+                  :rules="[val => !!val || 'El nombre del cliente es obligatorio']"
+                />
 
                 <div class="row q-col-gutter-md">
                   <div class="col-12 col-sm-6">
-                    <q-select v-model="formulario.marca" :options="marcas" label="Marca" dark outlined
-                      color="amber-14" />
+                    <q-select 
+                      v-model="formulario.marca" 
+                      :options="marcas" 
+                      label="Marca *" 
+                      dark 
+                      outlined
+                      color="amber-14" 
+                      lazy-rules
+                      :rules="[val => !!val || 'Selecciona una marca']"
+                    />
                   </div>
 
                   <div class="col-12 col-sm-6">
-                    <q-select v-model="formulario.modelo" :options="modelos" label="Modelo" dark outlined
-                      color="amber-14" />
-                  </div>
-                </div>
-
-                <div class="row q-col-gutter-md q-mt-sm">
-                  <div class="col-12 col-sm-6">
-                    <q-select v-model="formulario.tipoReparacion" :options="reparaciones"
-                      label="Tipo de reparación (Múltiple)" multiple use-chips dark outlined color="amber-14" />
-                  </div>
-
-                  <div class="col-12 col-sm-6">
-                    <q-select v-model="formulario.tecnico" :options="tecnicos" label="Técnico" dark outlined
-                      color="amber-14" />
-                  </div>
-                </div>
-
-                <div class="row q-col-gutter-md q-mt-sm">
-                  <div class="col-12 col-sm-6">
-                    <q-input v-model.number="formulario.precio" label="Precio" type="number" dark outlined
-                      color="amber-14" />
-                  </div>
-
-                  <div class="col-12 col-sm-6">
-                    <q-select v-model="formulario.metodoPago" :options="metodos" label="Método de pago" dark outlined
-                      color="amber-14" />
+                    <q-select 
+                      v-model="formulario.modelo" 
+                      :options="modelos" 
+                      label="Modelo *" 
+                      dark 
+                      outlined
+                      color="amber-14" 
+                      lazy-rules
+                      :rules="[val => !!val || 'Selecciona un modelo']"
+                    />
                   </div>
                 </div>
 
                 <div class="row q-col-gutter-md q-mt-sm">
                   <div class="col-12 col-sm-6">
-                    <q-select v-model="formulario.estadoPago" :options="estadosPago" label="Estado del pago" dark
-                      outlined color="amber-14" />
+                    <q-select 
+                      v-model="formulario.tipoReparacion" 
+                      :options="reparaciones"
+                      label="Tipo de reparación (Múltiple) *" 
+                      multiple 
+                      use-chips 
+                      dark 
+                      outlined 
+                      color="amber-14" 
+                      lazy-rules
+                      :rules="[val => (val && val.length > 0) || 'Selecciona al menos una reparación']"
+                    />
                   </div>
 
                   <div class="col-12 col-sm-6">
-                    <q-select v-model="formulario.estadoEquipo" :options="opcionesEstadoEquipoFiltradas"
-                      label="Estado del equipo" dark outlined color="amber-14" />
+                    <q-select 
+                      v-model="formulario.tecnico" 
+                      :options="tecnicos" 
+                      label="Técnico *" 
+                      dark 
+                      outlined
+                      color="amber-14" 
+                      lazy-rules
+                      :rules="[val => !!val || 'Selecciona un técnico']"
+                    />
+                  </div>
+                </div>
+
+                <div class="row q-col-gutter-md q-mt-sm">
+                  <div class="col-12 col-sm-6">
+                    <q-input 
+                      v-model.number="formulario.precio" 
+                      label="Precio *" 
+                      type="number" 
+                      dark 
+                      outlined
+                      color="amber-14" 
+                      lazy-rules
+                      :rules="[
+                        val => (val !== null && val !== '' && val !== undefined) || 'El precio es obligatorio',
+                        val => val >= 0 || 'El precio debe ser un número positivo'
+                      ]"
+                    />
+                  </div>
+
+                  <div class="col-12 col-sm-6">
+                    <q-select 
+                      v-model="formulario.metodoPago" 
+                      :options="metodos" 
+                      label="Método de pago *" 
+                      dark 
+                      outlined
+                      color="amber-14" 
+                      lazy-rules
+                      :rules="[val => !!val || 'Selecciona un método de pago']"
+                    />
+                  </div>
+                </div>
+
+                <div class="row q-col-gutter-md q-mt-sm">
+                  <div class="col-12 col-sm-6">
+                    <q-select 
+                      v-model="formulario.estadoPago" 
+                      :options="estadosPago" 
+                      label="Estado del pago *" 
+                      dark
+                      outlined 
+                      color="amber-14" 
+                      lazy-rules
+                      :rules="[val => !!val || 'Selecciona el estado del pago']"
+                    />
+                  </div>
+
+                  <div class="col-12 col-sm-6">
+                    <q-select 
+                      v-model="formulario.estadoEquipo" 
+                      :options="opcionesEstadoEquipoFiltradas"
+                      label="Estado del equipo *" 
+                      dark 
+                      outlined 
+                      color="amber-14" 
+                      lazy-rules
+                      :rules="[val => !!val || 'Selecciona el estado del equipo']"
+                    />
                     <div v-if="!esTecnico" class="text-caption text-amber-5 q-mt-xs">
                       🔒 Se requiere Modo Técnico para marcar como 'Entregado'.
                     </div>
                   </div>
                 </div>
 
-                <q-input v-if="formulario.estadoPago === 'Abono'" v-model.number="formulario.abono"
-                  label="Valor del abono" type="number" dark outlined color="amber-14" class="q-mt-md" />
+                <q-input 
+                  v-if="formulario.estadoPago === 'Abono'" 
+                  v-model.number="formulario.abono"
+                  label="Valor del abono *" 
+                  type="number" 
+                  dark 
+                  outlined 
+                  color="amber-14" 
+                  class="q-mt-md" 
+                  lazy-rules
+                  :rules="[
+                    val => (val !== null && val !== '' && val !== undefined) || 'Ingresa el valor del abono',
+                    val => val > 0 || 'El abono debe ser mayor a 0',
+                    val => val <= formulario.precio || 'El abono no puede superar el precio total'
+                  ]"
+                />
 
-                <q-input v-model="formulario.observaciones" label="Observaciones" type="textarea" rows="3" dark outlined
-                  color="amber-14" class="q-mt-md" />
+                <q-input 
+                  v-model="formulario.observaciones" 
+                  label="Observaciones" 
+                  type="textarea" 
+                  rows="3" 
+                  dark 
+                  outlined
+                  color="amber-14" 
+                  class="q-mt-md" 
+                />
 
                 <div class="row justify-end q-mt-lg">
                   <q-btn label="Cancelar" color="grey-6" flat v-close-popup class="q-mr-sm" />

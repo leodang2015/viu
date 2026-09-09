@@ -156,7 +156,7 @@
               </q-input>
 
               <div v-if="errorClave" class="text-negative text-caption q-mt-xs text-bold">
-                ⚠️ Contraseña incorrecta.
+                ⚠️ Contraseña incorrecta.LA CONTRASEÑA ES 1234
               </div>
             </q-card-section>
 

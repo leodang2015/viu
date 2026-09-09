@@ -63,8 +63,9 @@
                 'bg-positive': item.estadoPago === 'Pagado'
               }" class="q-pa-sm text-center text-bold text-uppercase">
                 PAGO: {{ item.estadoPago || "Sin definir" }}
-                <span v-if="item.estadoPago === 'Abono'"> ({{ item.abono || 0 }} / Total: {{ item.precio || 0 }})</span>
-                <span v-else-if="item.precio"> - {{ item.precio }}</span>
+                <span v-if="item.estadoPago === 'Abono'"> ({{ formatoMoneda(item.abono) }} / Total: {{
+                  formatoMoneda(item.precio) }})</span>
+                <span v-else-if="item.precio"> - {{ formatoMoneda(item.precio) }}</span>
               </div>
 
               <q-card-section>
@@ -104,7 +105,7 @@
                 <div class="text-body1"><b>Método de pago:</b> {{ item.metodoPago || "Sin definir" }}</div>
 
                 <div v-if="item.estadoPago === 'Abono'" class="text-body1 q-mt-xs text-negative text-bold">
-                  <b>Falta por pagar:</b> {{ (item.precio || 0) - (item.abono || 0) }}
+                  <b>Falta por pagar:</b> {{ formatoMoneda((item.precio || 0) - (item.abono || 0)) }}
                 </div>
 
                 <div v-if="item.observaciones"
@@ -184,134 +185,63 @@
             <q-card-section>
               <q-form @submit.prevent="guardar">
 
-                <q-input 
-                  v-model="formulario.cliente" 
-                  label="Nombre del cliente *" 
-                  dark 
-                  outlined 
-                  color="amber-14"
-                  class="q-mb-md" 
-                  lazy-rules
-                  :rules="[val => !!val && val.trim() !== '' || 'El nombre del cliente es obligatorio']"
-                />
+                <q-input v-model="formulario.cliente" label="Nombre del cliente *" dark outlined color="amber-14"
+                  class="q-mb-md" lazy-rules
+                  :rules="[val => !!val && val.trim() !== '' || 'El nombre del cliente es obligatorio']" />
 
                 <div class="row q-col-gutter-md">
                   <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.marca" 
-                      :options="marcas" 
-                      label="Marca *" 
-                      dark 
-                      outlined
-                      color="amber-14" 
-                      lazy-rules
-                      :rules="[val => !!val || 'Selecciona una marca']"
-                    />
+                    <q-select v-model="formulario.marca" :options="marcas" label="Marca *" dark outlined
+                      color="amber-14" lazy-rules :rules="[val => !!val || 'Selecciona una marca']" />
                   </div>
 
                   <div class="col-12 col-sm-6">
-                    <q-input 
-                      v-model="formulario.modelo" 
-                      label="Modelo *" 
-                      dark 
-                      outlined
-                      color="amber-14" 
-                      lazy-rules
-                      :rules="[val => !!val && val.trim() !== '' || 'Escribe el modelo del equipo']"
-                    />
+                    <q-input v-model="formulario.modelo" label="Modelo *" dark outlined color="amber-14" lazy-rules
+                      :rules="[val => !!val && val.trim() !== '' || 'Escribe el modelo del equipo']" />
                   </div>
                 </div>
 
                 <div class="row q-col-gutter-md q-mt-sm">
                   <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.tipoReparacion" 
-                      :options="reparaciones"
-                      label="Tipo de reparación (Múltiple) *" 
-                      multiple 
-                      use-chips 
-                      dark 
-                      outlined 
-                      color="amber-14" 
-                      lazy-rules
-                      :rules="[val => (val && val.length > 0) || 'Selecciona al menos una reparación']"
-                    />
+                    <q-select v-model="formulario.tipoReparacion" :options="reparaciones"
+                      label="Tipo de reparación (Múltiple) *" multiple use-chips dark outlined color="amber-14"
+                      lazy-rules :rules="[val => (val && val.length > 0) || 'Selecciona al menos una reparación']" />
                   </div>
 
                   <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.tecnico" 
-                      :options="tecnicos" 
-                      label="Técnico *" 
-                      dark 
-                      outlined
-                      color="amber-14" 
-                      lazy-rules
-                      :rules="[val => !!val || 'Selecciona un técnico']"
-                    />
+                    <q-select v-model="formulario.tecnico" :options="tecnicos" label="Técnico *" dark outlined
+                      color="amber-14" lazy-rules :rules="[val => !!val || 'Selecciona un técnico']" />
                   </div>
                 </div>
 
                 <div class="row q-col-gutter-md q-mt-sm">
                   <div class="col-12 col-sm-6">
-                    <q-input 
-                      v-model.number="formulario.precio" 
-                      label="Precio *" 
-                      type="number" 
-                      dark 
-                      outlined
-                      color="amber-14" 
-                      lazy-rules
-                      :rules="[
+                    <q-input v-model.number="formulario.precio" label="Precio *" type="number" dark outlined
+                      color="amber-14" lazy-rules :rules="[
                         val => (val !== null && val !== '' && val !== undefined) || 'El precio es obligatorio',
                         val => val >= 0 || 'El precio debe ser un número positivo'
-                      ]"
-                    />
+                      ]" />
                   </div>
 
                   <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.metodoPago" 
-                      :options="metodos" 
-                      label="Método de pago *" 
-                      dark 
-                      outlined
-                      color="amber-14" 
-                      lazy-rules
-                      :rules="[val => !!val || 'Selecciona un método de pago']"
-                    />
+                    <q-select v-model="formulario.metodoPago" :options="metodos" label="Método de pago *" dark outlined
+                      color="amber-14" lazy-rules :rules="[val => !!val || 'Selecciona un método de pago']" />
                   </div>
                 </div>
 
                 <div class="row q-col-gutter-md q-mt-sm">
                   <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.estadoPago" 
-                      :options="estadosPago" 
-                      label="Estado del pago *" 
-                      dark
-                      outlined 
-                      color="amber-14" 
-                      lazy-rules
-                      :rules="[val => !!val || 'Selecciona el estado del pago']"
-                      @update:model-value="validarEstadoEquipoConPago"
-                    />
+                    <q-select v-model="formulario.estadoPago" :options="estadosPago" label="Estado del pago *" dark
+                      outlined color="amber-14" lazy-rules :rules="[val => !!val || 'Selecciona el estado del pago']"
+                      @update:model-value="validarEstadoEquipoConPago" />
                   </div>
 
                   <div class="col-12 col-sm-6">
-                    <q-select 
-                      v-model="formulario.estadoEquipo" 
-                      :options="opcionesEstadoEquipoFiltradas"
-                      label="Estado del equipo *" 
-                      dark 
-                      outlined 
-                      color="amber-14" 
-                      lazy-rules
-                      :rules="[
+                    <q-select v-model="formulario.estadoEquipo" :options="opcionesEstadoEquipoFiltradas"
+                      label="Estado del equipo *" dark outlined color="amber-14" lazy-rules :rules="[
                         val => !!val || 'Selecciona el estado del equipo',
                         val => (val !== 'Entregado' || formulario.estadoPago === 'Pagado') || 'No se puede entregar si no está totalmente Pagado'
-                      ]"
-                    />
+                      ]" />
                     <div v-if="!esTecnico" class="text-caption text-amber-5 q-mt-xs">
                       🔒 Se requiere Modo Técnico para marcar como 'Entregado'.
                     </div>
@@ -321,33 +251,16 @@
                   </div>
                 </div>
 
-                <q-input 
-                  v-if="formulario.estadoPago === 'Abono'" 
-                  v-model.number="formulario.abono"
-                  label="Valor del abono *" 
-                  type="number" 
-                  dark 
-                  outlined 
-                  color="amber-14" 
-                  class="q-mt-md" 
-                  lazy-rules
+                <q-input v-if="formulario.estadoPago === 'Abono'" v-model.number="formulario.abono"
+                  label="Valor del abono *" type="number" dark outlined color="amber-14" class="q-mt-md" lazy-rules
                   :rules="[
                     val => (val !== null && val !== '' && val !== undefined) || 'Ingresa el valor del abono',
                     val => val > 0 || 'El abono debe ser mayor a 0',
                     val => val < formulario.precio || 'El abono debe ser menor al precio total'
-                  ]"
-                />
+                  ]" />
 
-                <q-input 
-                  v-model="formulario.observaciones" 
-                  label="Observaciones" 
-                  type="textarea" 
-                  rows="3" 
-                  dark 
-                  outlined
-                  color="amber-14" 
-                  class="q-mt-md" 
-                />
+                <q-input v-model="formulario.observaciones" label="Observaciones" type="textarea" rows="3" dark outlined
+                  color="amber-14" class="q-mt-md" />
 
                 <div class="row justify-end q-mt-lg">
                   <q-btn label="Cancelar" color="grey-6" flat v-close-popup class="q-mr-sm" />
@@ -454,6 +367,27 @@ const tecnicos = [
 const metodos = ["Efectivo", "Transferencia", "Tarjeta"];
 const estadosPago = ["Pagado", "Pendiente", "Abono"];
 const estadosEquipo = ["Recibido", "En reparación", "Listo para entregar", "Entregado"];
+
+function formatoMoneda(valor) {
+  if (valor === null || valor === undefined || valor === "" || isNaN(valor)) return "$0";
+
+  let numStr = Math.round(valor).toString();
+  let partes = [];
+
+  while (numStr.length > 3) {
+    partes.unshift(numStr.slice(-3));
+    numStr = numStr.slice(0, -3);
+  }
+  partes.unshift(numStr);
+
+  if (partes.length >= 3) {
+    const millones = partes.slice(0, partes.length - 2).join("'");
+    const resto = partes.slice(partes.length - 2).join(".");
+    return `$${millones}'${resto}`;
+  }
+
+  return `$${partes.join(".")}`;
+}
 
 const opcionesEstadoEquipoFiltradas = computed(() => {
   let opciones = [...estadosEquipo];

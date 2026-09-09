@@ -156,7 +156,7 @@
               </q-input>
 
               <div v-if="errorClave" class="text-negative text-caption q-mt-xs text-bold">
-                ⚠️ Contraseña incorrecta.LA CONTRASEÑA ES 1234
+                ⚠️ Contraseña incorrecta.LA CONTRASEÑA ES {{ CLAVE_TECNICO }}
               </div>
             </q-card-section>
 
@@ -301,7 +301,7 @@ import { useLocalStorage } from "@vueuse/core";
 const lista = useLocalStorage("taller_don_efrain", []);
 const esTecnico = useLocalStorage("taller_don_efrain_es_tecnico", false);
 
-const CLAVE_TECNICO = "1234";
+const CLAVE_TECNICO = "hola";
 
 const modal = ref(false);
 const eliminar = ref(false);

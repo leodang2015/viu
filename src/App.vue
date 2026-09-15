@@ -213,7 +213,18 @@
                     <q-select v-model="formulario.tipoReparacion" :options="reparaciones"
                       label="Tipo de reparación (Múltiple) *" multiple use-chips dark outlined color="amber-14"
                       lazy-rules :rules="[val => (val && val.length > 0) || 'Selecciona al menos una reparación']"
-                      @update:model-value="calcularPrecioAutomatico" />
+                      @update:model-value="calcularPrecioAutomatico">
+                      <template v-slot:option="{ itemProps, opt, selected, toggleOption }">
+                        <q-item v-bind="itemProps" class="text-white bg-grey-9">
+                          <q-item-section>
+                            <q-item-label>{{ opt.label }}</q-item-label>
+                          </q-item-section>
+                          <q-item-section side>
+                            <span class="text-amber-14 text-bold">{{ opt.precioTexto }}</span>
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
                   </div>
 
                   <div class="col-12 col-sm-6">
@@ -397,8 +408,13 @@ const preciosReparaciones = {
 };
 
 const reparaciones = [
-  "Cambio de pantalla", "Cambio de batería", "Cambio de pin de carga",
-  "Liberación", "Mantenimiento de software", "Cambio de flex", "Otros"
+  { label: "Cambio de pantalla", value: "Cambio de pantalla", precioTexto: "$150.000" },
+  { label: "Cambio de batería", value: "Cambio de batería", precioTexto: "$80.000" },
+  { label: "Cambio de pin de carga", value: "Cambio de pin de carga", precioTexto: "$50.000" },
+  { label: "Liberación", value: "Liberación", precioTexto: "$40.000" },
+  { label: "Mantenimiento de software", value: "Mantenimiento de software", precioTexto: "$35.000" },
+  { label: "Cambio de flex", value: "Cambio de flex", precioTexto: "$60.000" },
+  { label: "Otros", value: "Otros", precioTexto: "Variable" }
 ];
 
 const tecnicos = [
@@ -579,12 +595,11 @@ function abrirEditar(index) {
     datos.tipoReparacion = [];
   }
 
-  const listaBase = ["Cambio de pantalla", "Cambio de batería", "Cambio de pin de carga", "Liberación", "Mantenimiento de software", "Cambio de flex", "Otros"];
-  let customIndex = datos.tipoReparacion.findIndex(r => !listaBase.includes(r));
+  const listaBaseNombres = ["Cambio de pantalla", "Cambio de batería", "Cambio de pin de carga", "Liberación", "Mantenimiento de software", "Cambio de flex"];
+  let customIndex = datos.tipoReparacion.findIndex(r => !listaBaseNombres.includes(r) && r !== "Otros");
   if (customIndex !== -1) {
     datos.otroReparacion = datos.tipoReparacion[customIndex];
     datos.tipoReparacion[customIndex] = "Otros";
-    // Estimar o rescatar un precio si se desea, por defecto 0 o diferencia
   } else {
     datos.otroReparacion = "";
     datos.precioOtro = 0;

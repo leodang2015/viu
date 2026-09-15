@@ -212,7 +212,7 @@
                   <div class="col-12 col-sm-6">
                     <q-select v-model="formulario.tipoReparacion" :options="reparaciones"
                       label="Tipo de reparación (Múltiple) *" multiple use-chips dark outlined color="amber-14"
-                      class="chips-negros-input"
+                      class="chips-negros-input" option-value="value" option-label="label" emit-value map-options
                       lazy-rules :rules="[val => (val && val.length > 0) || 'Selecciona al menos una reparación']"
                       @update:model-value="calcularPrecioAutomatico">
                       <template v-slot:option="{ itemProps, opt }">

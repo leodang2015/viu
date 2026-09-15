@@ -125,8 +125,8 @@
                   <div class="text-subtitle2 text-bold text-amber-14">
                     ⭐ Calificación del cliente
                   </div>
-                  <q-rating v-model="item.calificacion" size="1.8em" color="amber-14" :readonly="esTecnico" :max="5" />
-                  <div v-if="!esTecnico" class="text-caption text-grey-4">
+                  <q-rating v-model="item.calificacion" size="1.8em" color="amber-14" :readonly="item.calificacion > 0" :max="5" />
+                  <div v-if="!esTecnico && item.calificacion === 0" class="text-caption text-grey-4">
                     Haz clic en las estrellas para calificar
                   </div>
                 </div>
@@ -135,17 +135,15 @@
 
               <q-separator dark />
 
-              <q-card-actions align="right" class="bg-black">
-                <q-btn v-if="item.estadoEquipo !== 'Entregado'" flat color="amber-14" icon="edit" label="Editar"
-                  @click="abrirEditar(index)" />
-
-                <q-btn v-if="item.estadoEquipo !== 'Entregado'" flat color="negative" icon="delete" label="Eliminar"
-                  @click="confirmarEliminar(index)" />
-
-                <span v-if="item.estadoEquipo === 'Entregado'" class="text-positive text-bold q-pa-sm text-caption">
+              <q-card-actions v-if="item.estadoEquipo !== 'Entregado'" align="right" class="bg-black">
+                <q-btn flat color="amber-14" icon="edit" label="Editar" @click="abrirEditar(index)" />
+                <q-btn flat color="negative" icon="delete" label="Eliminar" @click="confirmarEliminar(index)" />
+              </q-card-actions>
+              <div v-else class="bg-black text-center q-pa-sm">
+                <span class="text-positive text-bold text-caption">
                   ✓ REGISTRO CERRADO Y ENTREGADO
                 </span>
-              </q-card-actions>
+              </div>
 
             </q-card>
           </div>
@@ -214,13 +212,22 @@
                   <div class="col-12 col-sm-6">
                     <q-select v-model="formulario.tipoReparacion" :options="reparaciones"
                       label="Tipo de reparación (Múltiple) *" multiple use-chips dark outlined color="amber-14"
-                      lazy-rules :rules="[val => (val && val.length > 0) || 'Selecciona al menos una reparación']" />
+                      lazy-rules :rules="[val => (val && val.length > 0) || 'Selecciona al menos una reparación']"
+                      @update:model-value="calcularPrecioAutomatico" />
                   </div>
 
                   <div class="col-12 col-sm-6">
                     <q-select v-model="formulario.tecnico" :options="tecnicos" label="Técnico *" dark outlined
                       color="amber-14" lazy-rules :rules="[val => !!val || 'Selecciona un técnico']" />
                   </div>
+                </div>
+
+                <div v-if="formulario.tipoReparacion && formulario.tipoReparacion.includes('Otros')" class="q-mt-md">
+                  <q-input v-model="formulario.otroReparacion" label="Especificar otra reparación *" dark outlined color="amber-14" lazy-rules :rules="[val => !formulario.tipoReparacion.includes('Otros') || (!!val && val.trim() !== '') || 'Debe especificar el detalle de otros']" />
+                </div>
+
+                <div v-if="formulario.tipoReparacion && formulario.tipoReparacion.includes('Otros')" class="q-mt-md">
+                  <q-input :model-value="formatoPrecioOtroInput" label="Precio de la reparación personalizada *" prefix="$" dark outlined color="amber-14" @update:model-value="actualizarPrecioOtro" />
                 </div>
 
                 <div class="row q-col-gutter-md q-mt-sm">
@@ -353,6 +360,8 @@ const formulario = ref({
   marca: null,
   modelo: "",
   tipoReparacion: [],
+  otroReparacion: "",
+  precioOtro: 0,
   tecnico: null,
   precio: null,
   metodoPago: null,
@@ -376,6 +385,16 @@ const modelosSugeridos = [
 ];
 
 const opcionesModeloFiltradas = ref(modelosSugeridos);
+
+// Precios predeterminados por tipo de reparación
+const preciosReparaciones = {
+  "Cambio de pantalla": 150000,
+  "Cambio de batería": 80000,
+  "Cambio de pin de carga": 50000,
+  "Liberación": 40000,
+  "Mantenimiento de software": 35000,
+  "Cambio de flex": 60000
+};
 
 const reparaciones = [
   "Cambio de pantalla", "Cambio de batería", "Cambio de pin de carga",
@@ -438,6 +457,10 @@ const formatoAbonoInput = computed(() => {
   return formatearNumeroTexto(formulario.value.abono);
 });
 
+const formatoPrecioOtroInput = computed(() => {
+  return formatearNumeroTexto(formulario.value.precioOtro);
+});
+
 function actualizarPrecio(val) {
   const soloNumeros = val ? val.replace(/\D/g, "") : "";
   formulario.value.precio = soloNumeros ? parseInt(soloNumeros, 10) : null;
@@ -446,6 +469,27 @@ function actualizarPrecio(val) {
 function actualizarAbono(val) {
   const soloNumeros = val ? val.replace(/\D/g, "") : "";
   formulario.value.abono = soloNumeros ? parseInt(soloNumeros, 10) : null;
+}
+
+function actualizarPrecioOtro(val) {
+  const soloNumeros = val ? val.replace(/\D/g, "") : "";
+  formulario.value.precioOtro = soloNumeros ? parseInt(soloNumeros, 10) : 0;
+  calcularPrecioAutomatico();
+}
+
+function calcularPrecioAutomatico() {
+  let total = 0;
+  if (formulario.value.tipoReparacion && Array.isArray(formulario.value.tipoReparacion)) {
+    formulario.value.tipoReparacion.forEach(rep => {
+      if (preciosReparaciones[rep]) {
+        total += preciosReparaciones[rep];
+      }
+    });
+  }
+  if (formulario.value.tipoReparacion && formulario.value.tipoReparacion.includes('Otros')) {
+    total += Number(formulario.value.precioOtro || 0);
+  }
+  formulario.value.precio = total > 0 ? total : null;
 }
 
 function formatoMoneda(valor) {
@@ -501,6 +545,8 @@ function nuevoFormulario() {
     marca: null,
     modelo: "",
     tipoReparacion: [],
+    otroReparacion: "",
+    precioOtro: 0,
     tecnico: null,
     precio: null,
     metodoPago: null,
@@ -533,6 +579,17 @@ function abrirEditar(index) {
     datos.tipoReparacion = [];
   }
 
+  const listaBase = ["Cambio de pantalla", "Cambio de batería", "Cambio de pin de carga", "Liberación", "Mantenimiento de software", "Cambio de flex", "Otros"];
+  let customIndex = datos.tipoReparacion.findIndex(r => !listaBase.includes(r));
+  if (customIndex !== -1) {
+    datos.otroReparacion = datos.tipoReparacion[customIndex];
+    datos.tipoReparacion[customIndex] = "Otros";
+    // Estimar o rescatar un precio si se desea, por defecto 0 o diferencia
+  } else {
+    datos.otroReparacion = "";
+    datos.precioOtro = 0;
+  }
+
   formulario.value = datos;
   modal.value = true;
 }
@@ -549,15 +606,30 @@ function guardar() {
     formulario.value.abono = null;
   }
 
+  let reparacionesFinales = [...formulario.value.tipoReparacion];
+  if (reparacionesFinales.includes("Otros")) {
+    reparacionesFinales = reparacionesFinales.filter(r => r !== "Otros");
+    if (formulario.value.otroReparacion && formulario.value.otroReparacion.trim() !== "") {
+      reparacionesFinales.push(formulario.value.otroReparacion.trim());
+    }
+  }
+
+  const datosAGuardar = {
+    ...formulario.value,
+    tipoReparacion: reparacionesFinales
+  };
+  delete datosAGuardar.otroReparacion;
+  delete datosAGuardar.precioOtro;
+
   if (editando.value) {
     lista.value[posicion.value] = {
       ...lista.value[posicion.value],
-      ...formulario.value
+      ...datosAGuardar
     };
   } else {
     lista.value.push({
       id: Date.now(),
-      ...formulario.value
+      ...datosAGuardar
     });
   }
 

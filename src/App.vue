@@ -125,9 +125,12 @@
                   <div class="text-subtitle2 text-bold text-amber-14">
                     ⭐ Calificación del cliente
                   </div>
-                  <q-rating v-model="item.calificacion" size="1.8em" color="amber-14" :readonly="item.calificacion > 0" :max="5" />
+                  <q-rating v-model="item.calificacion" size="1.8em" color="amber-14" :readonly="esTecnico || item.calificacion > 0" :max="5" />
                   <div v-if="!esTecnico && item.calificacion === 0" class="text-caption text-grey-4">
                     Haz clic en las estrellas para calificar
+                  </div>
+                  <div v-if="esTecnico" class="text-caption text-grey-5 q-mt-xs">
+                    🔒 Los técnicos no pueden calificar los servicios.
                   </div>
                 </div>
 

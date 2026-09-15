@@ -225,10 +225,10 @@
 
                 <div class="row q-col-gutter-md q-mt-sm">
                   <div class="col-12 col-sm-6">
-                    <q-input v-model.number="formulario.precio" label="Precio *" type="number" dark outlined
-                      color="amber-14" lazy-rules :rules="[
-                        val => (val !== null && val !== '' && val !== undefined) || 'El precio es obligatorio',
-                        val => val >= 0 || 'El precio debe ser un número positivo'
+                    <q-input :model-value="formatoPrecioInput" label="Precio *" prefix="$" dark outlined
+                      color="amber-14" lazy-rules @update:model-value="actualizarPrecio" :rules="[
+                        val => (formulario.precio !== null && formulario.precio !== '' && formulario.precio !== undefined) || 'El precio es obligatorio',
+                        val => formulario.precio >= 0 || 'El precio debe ser un número positivo'
                       ]" />
                   </div>
 
@@ -261,11 +261,11 @@
                 </div>
 
                 <div v-if="formulario.estadoPago === 'Abono'" class="q-mt-md">
-                  <q-input v-model.number="formulario.abono" label="Valor del abono *" type="number" dark outlined
-                    color="amber-14" lazy-rules :rules="[
-                      val => (val !== null && val !== '' && val !== undefined) || 'Ingresa el valor del abono',
-                      val => val > 0 || 'El abono debe ser mayor a 0',
-                      val => val < formulario.precio || 'El abono debe ser menor al precio total'
+                  <q-input :model-value="formatoAbonoInput" label="Valor del abono *" prefix="$" dark outlined
+                    color="amber-14" lazy-rules @update:model-value="actualizarAbono" :rules="[
+                      val => (formulario.abono !== null && formulario.abono !== '' && formulario.abono !== undefined) || 'Ingresa el valor del abono',
+                      val => formulario.abono > 0 || 'El abono debe ser mayor a 0',
+                      val => formulario.abono < formulario.precio || 'El abono debe ser menor al precio total'
                     ]" />
                   <div v-if="formulario.precio && formulario.abono > 0 && formulario.abono < formulario.precio"
                     class="text-caption text-warning q-mt-xs text-bold">
@@ -409,6 +409,45 @@ function crearNuevoModelo(val, done) {
   }
 }
 
+function formatearNumeroTexto(valor) {
+  if (valor === null || valor === undefined || valor === "" || isNaN(valor)) return "";
+
+  let numStr = Math.round(valor).toString();
+  let partes = [];
+
+  while (numStr.length > 3) {
+    partes.unshift(numStr.slice(-3));
+    numStr = numStr.slice(0, -3);
+  }
+  partes.unshift(numStr);
+
+  if (partes.length >= 3) {
+    const millones = partes.slice(0, partes.length - 2).join(",");
+    const resto = partes.slice(partes.length - 2).join(".");
+    return `${millones},${resto}`;
+  }
+
+  return partes.join(".");
+}
+
+const formatoPrecioInput = computed(() => {
+  return formatearNumeroTexto(formulario.value.precio);
+});
+
+const formatoAbonoInput = computed(() => {
+  return formatearNumeroTexto(formulario.value.abono);
+});
+
+function actualizarPrecio(val) {
+  const soloNumeros = val ? val.replace(/\D/g, "") : "";
+  formulario.value.precio = soloNumeros ? parseInt(soloNumeros, 10) : null;
+}
+
+function actualizarAbono(val) {
+  const soloNumeros = val ? val.replace(/\D/g, "") : "";
+  formulario.value.abono = soloNumeros ? parseInt(soloNumeros, 10) : null;
+}
+
 function formatoMoneda(valor) {
   if (valor === null || valor === undefined || valor === "" || isNaN(valor)) return "$0";
 
@@ -422,9 +461,9 @@ function formatoMoneda(valor) {
   partes.unshift(numStr);
 
   if (partes.length >= 3) {
-    const millones = partes.slice(0, partes.length - 2).join("'");
+    const millones = partes.slice(0, partes.length - 2).join(",");
     const resto = partes.slice(partes.length - 2).join(".");
-    return `$${millones}'${resto}`;
+    return `$${millones},${resto}`;
   }
 
   return `$${partes.join(".")}`;

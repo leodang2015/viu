@@ -57,7 +57,6 @@
           <div v-for="(item, index) in lista" :key="item.id" class="col-12 col-sm-6 col-md-4">
             <q-card class="bg-grey-9 text-white borde alto">
 
-              <!-- BARRA SUPERIOR CON ABONO, TOTAL Y FALTANTE -->
               <div :class="{
                 'bg-negative': item.estadoPago === 'Pendiente',
                 'bg-warning text-black': item.estadoPago === 'Abono',
@@ -107,7 +106,6 @@
                 <div class="text-body1 q-mt-xs"><b>Técnico:</b> {{ item.tecnico || "Sin definir" }}</div>
                 <div class="text-body1"><b>Método de pago:</b> {{ item.metodoPago || "Sin definir" }}</div>
 
-                <!-- BLOQUE INFERIOR DE DETALLE DE ABONO -->
                 <div v-if="item.estadoPago === 'Abono'" class="q-mt-sm q-pa-xs rounded-borders bg-black text-white">
                   <div class="text-body1 text-warning">
                     <b>Abonado:</b> {{ formatoMoneda(item.abono) }}
@@ -205,8 +203,10 @@
                   </div>
 
                   <div class="col-12 col-sm-6">
-                    <q-input v-model="formulario.modelo" label="Modelo *" dark outlined color="amber-14" lazy-rules
-                      :rules="[val => !!val && val.trim() !== '' || 'Escribe el modelo del equipo']" />
+                    <q-select v-model="formulario.modelo" :options="opcionesModeloFiltradas" label="Modelo *" dark
+                      outlined use-input fill-input hide-selected input-debounce="0" color="amber-14" lazy-rules
+                      :rules="[val => !!val && val.trim() !== '' || 'Escribe o selecciona el modelo']"
+                      @filter="filtrarModelos" @new-value="crearNuevoModelo" />
                   </div>
                 </div>
 
@@ -369,6 +369,14 @@ const marcas = [
   "Huawei", "Realme", "OPPO", "Honor"
 ];
 
+const modelosSugeridos = [
+  "iPhone 11", "iPhone 12", "iPhone 13", "iPhone 14", "iPhone 15",
+  "Galaxy S20", "Galaxy S21", "Galaxy S22", "Galaxy A54", "Galaxy A34",
+  "Redmi Note 11", "Redmi Note 12", "Poco X5", "Moto G84", "Moto E13"
+];
+
+const opcionesModeloFiltradas = ref(modelosSugeridos);
+
 const reparaciones = [
   "Cambio de pantalla", "Cambio de batería", "Cambio de pin de carga",
   "Liberación", "Mantenimiento de software", "Cambio de flex", "Otros"
@@ -381,6 +389,25 @@ const tecnicos = [
 const metodos = ["Efectivo", "Transferencia", "Tarjeta"];
 const estadosPago = ["Pagado", "Pendiente", "Abono"];
 const estadosEquipo = ["Recibido", "En reparación", "Listo para entregar", "Entregado"];
+
+function filtrarModelos(val, update) {
+  update(() => {
+    if (val === "") {
+      opcionesModeloFiltradas.value = modelosSugeridos;
+    } else {
+      const needle = val.toLowerCase();
+      opcionesModeloFiltradas.value = modelosSugeridos.filter(
+        v => v.toLowerCase().indexOf(needle) > -1
+      );
+    }
+  });
+}
+
+function crearNuevoModelo(val, done) {
+  if (val.length > 0) {
+    done(val, "add-unique");
+  }
+}
 
 function formatoMoneda(valor) {
   if (valor === null || valor === undefined || valor === "" || isNaN(valor)) return "$0";

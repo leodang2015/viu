@@ -95,8 +95,8 @@
                   <b>Reparaciones / Fallos:</b>
                   <div v-if="Array.isArray(item.tipoReparacion) && item.tipoReparacion.length > 0"
                     class="q-mt-xs row q-gutter-xs">
-                    <q-chip v-for="(fallo, fIdx) in item.tipoReparacion" :key="fIdx" dense color="amber-14"
-                      text-color="black" class="text-weight-bold">
+                    <q-chip v-for="(fallo, fIdx) in item.tipoReparacion" :key="fIdx" dense color="black"
+                      text-color="amber-14" class="text-weight-bold chip-personalizado">
                       {{ fallo }}
                     </q-chip>
                   </div>
@@ -212,9 +212,10 @@
                   <div class="col-12 col-sm-6">
                     <q-select v-model="formulario.tipoReparacion" :options="reparaciones"
                       label="Tipo de reparación (Múltiple) *" multiple use-chips dark outlined color="amber-14"
+                      class="chips-negros-input"
                       lazy-rules :rules="[val => (val && val.length > 0) || 'Selecciona al menos una reparación']"
                       @update:model-value="calcularPrecioAutomatico">
-                      <template v-slot:option="{ itemProps, opt, selected, toggleOption }">
+                      <template v-slot:option="{ itemProps, opt }">
                         <q-item v-bind="itemProps" class="text-white bg-grey-9">
                           <q-item-section>
                             <q-item-label>{{ opt.label }}</q-item-label>
@@ -717,5 +718,10 @@ function iconoEstado(estado) {
 .style-modal {
   width: 100%;
   max-width: 400px;
+}
+
+/* Estilo personalizado para forzar el fondo negro y letras ámbar legibles en los chips múltiples */
+.chip-personalizado {
+  border: 1px solid #ffb300;
 }
 </style>

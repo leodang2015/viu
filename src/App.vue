@@ -111,7 +111,8 @@
                   </div>
                 </div>
 
-                <div v-if="!esTecnico && item.mejorasExtra && item.mejorasExtra.length > 0 && item.estadoEquipo === 'Listo para entregar'" class="q-mt-md bg-grey-10 q-pa-sm rounded-borders borde">
+                <!-- PANEL DE CLIENTE PARA APROBAR MEJORAS (Corregido: visible para cualquier estado si hay mejoras) -->
+                <div v-if="!esTecnico && item.mejorasExtra && item.mejorasExtra.length > 0" class="q-mt-md bg-grey-10 q-pa-sm rounded-borders borde">
                   <div class="text-subtitle2 text-amber-5 text-bold">
                     👤 Panel de Aprobación (Vista Cliente)
                   </div>
@@ -804,6 +805,8 @@ function cambiarEstadoSwitchMejora(indexItem, indexMejora, valorSwitch) {
     } else if (estadoAnterior === "Rechazado" && nuevoEstado === "Aceptado") {
       item.precio = (item.precio || 0) + costoMejora;
     }
+
+    lista.value = [...lista.value];
   }
 }
 

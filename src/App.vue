@@ -3,6 +3,7 @@
     <q-page-container>
       <q-page class="q-pa-md bg-grey-10">
 
+        <!-- CABECERA -->
         <div class="q-mb-md bg-black text-amber-14 q-pa-md rounded-borders sombra borde">
           <div class="row items-center justify-between">
             <div>
@@ -21,6 +22,7 @@
           </div>
         </div>
 
+        <!-- BOTÓN NUEVO EQUIPO Y CONTADOR -->
         <div class="row q-col-gutter-md q-mb-md items-center">
           <div class="col-12 col-md-8">
             <q-btn label="INGRESAR NUEVO EQUIPO" icon="build" color="amber-14" text-color="black"
@@ -42,6 +44,7 @@
           </div>
         </div>
 
+        <!-- MENSAJE VACÍO -->
         <div v-if="lista.length === 0" class="text-center text-grey-5 q-pa-xl bg-grey-9 rounded-borders borde">
           <q-icon name="handyman" size="4rem" color="amber-14" />
           <div class="text-h6 q-mt-sm text-bold">
@@ -49,6 +52,7 @@
           </div>
         </div>
 
+        <!-- LISTADO DE TARJETAS -->
         <div v-else class="row q-col-gutter-md">
           <div v-for="(item, index) in lista" :key="item.id" class="col-12 col-sm-6 col-md-4">
             <q-card class="bg-grey-9 text-white borde alto">
@@ -99,7 +103,7 @@
                   <span v-else> {{ item.tipoReparacion || "Sin definir" }}</span>
                 </div>
 
-                <!-- SECCIÓN DE MEJORAS EXTRA -->
+                <!-- MEJORAS EXTRA -->
                 <div v-if="item.mejorasExtra && item.mejorasExtra.length > 0" class="q-mt-md bg-black q-pa-sm rounded-borders borde">
                   <div class="text-subtitle2 text-amber-14 text-bold">
                     🔧 Mejoras adicionales propuestas por el técnico:
@@ -112,7 +116,7 @@
                   </div>
                 </div>
 
-                <!-- PANEL DE VISTO BUENO / APROBACIÓN DEL CLIENTE CON SWITCH -->
+                <!-- PANEL APROBACIÓN CLIENTE -->
                 <div v-if="!esTecnico && item.mejorasExtra && item.mejorasExtra.length > 0 && item.estadoEquipo === 'Listo para entregar'" class="q-mt-md bg-blue-grey-10 q-pa-sm rounded-borders borde">
                   <div class="text-subtitle2 text-amber-14 text-bold">
                     👤 Panel de Aprobación (Vista Cliente)
@@ -139,7 +143,7 @@
                   </div>
                 </div>
 
-                <!-- SWITCH DE AVISO DE RECOGIDA PARA EL CLIENTE (CUANDO ESTÁ LISTO PARA ENTREGAR) -->
+                <!-- AVISO DE RECOGIDA -->
                 <div v-if="!esTecnico && item.estadoEquipo === 'Listo para entregar'" class="q-mt-md bg-blue-grey-10 q-pa-sm rounded-borders borde">
                   <div class="text-subtitle2 text-amber-14 text-bold">
                     📦 Aviso de Recogida
@@ -176,6 +180,7 @@
                   <b>Observaciones:</b> {{ item.observaciones }}
                 </div>
 
+                <!-- CALIFICACIÓN -->
                 <div v-if="item.estadoEquipo === 'Entregado'"
                   class="q-mt-md bg-black q-pa-sm rounded-borders text-center">
                   <div class="text-subtitle2 text-bold text-amber-14">
@@ -211,7 +216,7 @@
           </div>
         </div>
 
-        <!-- MODAL DE LOGIN TÉCNICO -->
+        <!-- MODAL LOGIN TÉCNICO -->
         <q-dialog v-model="modalLogin">
           <q-card class="bg-grey-9 text-white style-modal">
             <q-card-section class="bg-black text-amber-14 borde">
@@ -239,7 +244,7 @@
           </q-card>
         </q-dialog>
 
-        <!-- MODAL DE FORMULARIO -->
+        <!-- MODAL FORMULARIO (CREAR / EDITAR) -->
         <q-dialog v-model="modal">
           <q-card class="bg-grey-9 text-white formulario">
 
@@ -258,21 +263,42 @@
                   class="q-mb-md" lazy-rules
                   :rules="[val => !!val && val.trim() !== '' || 'El nombre del cliente es obligatorio']" />
 
+                <!-- SELECTS DE MARCA Y MODELO FILTRADOS -->
                 <div class="row q-col-gutter-md">
                   <div class="col-12 col-sm-6">
-                    <q-select v-model="formulario.marca" :options="marcas" label="Marca *" dark outlined
-                      color="amber-14" lazy-rules :rules="[val => !!val || 'Selecciona una marca']" />
+                    <q-select 
+                      v-model="formulario.marca" 
+                      :options="marcasFiltradas" 
+                      label="Marca de celular *" 
+                      dark 
+                      outlined
+                      color="amber-14" 
+                      use-input
+                      input-debounce="0"
+                      behavior="menu"
+                      @filter="filtrarMarcas"
+                      @focus="filtrarMarcas('', (cb) => cb())"
+                      lazy-rules 
+                      :rules="[val => !!val || 'Selecciona una marca']" 
+                      @update:model-value="formulario.modelo = ''"
+                    />
                   </div>
 
                   <div class="col-12 col-sm-6">
-                    <q-input 
+                    <q-select 
                       v-model="formulario.modelo" 
-                      label="Modelo *" 
+                      :options="modelosFiltrados" 
+                      label="Modelo de celular *" 
                       dark 
                       outlined 
                       color="amber-14" 
+                      use-input
+                      input-debounce="0"
+                      behavior="menu"
+                      @filter="filtrarModelos"
+                      @focus="filtrarModelos('', (cb) => cb())"
                       lazy-rules
-                      :rules="[val => !!val && String(val).trim() !== '' || 'Escribe el modelo del equipo']" 
+                      :rules="[val => !!val && String(val).trim() !== '' || 'Selecciona o escribe el modelo']" 
                     />
                   </div>
                 </div>
@@ -311,7 +337,7 @@
                   <q-input :model-value="formatoPrecioOtroInput" label="Precio de la reparación personalizada *" prefix="$" dark outlined color="amber-14" @update:model-value="actualizarPrecioOtro" />
                 </div>
 
-                <!-- SECCIÓN EXCLUSIVA EDICIÓN: EL TÉCNICO AGREGA NUEVAS MEJORAS CON SELECTOR MÚLTIPLE -->
+                <!-- SECCIÓN MEJORAS ADICIONALES (SI ESTÁ EDITANDO) -->
                 <div v-if="editando" class="q-mt-md bg-black q-pa-md rounded-borders borde">
                   <div class="text-subtitle2 text-amber-14 text-bold q-mb-sm">
                     ➕ Agregar Nuevas Mejoras o Elementos Encontrados (Técnico)
@@ -428,6 +454,7 @@
           </q-card>
         </q-dialog>
 
+        <!-- MODAL ELIMINAR -->
         <q-dialog v-model="eliminar">
           <q-card class="bg-grey-9 text-white style-modal">
             <q-card-section class="bg-negative text-white text-h6">
@@ -445,6 +472,7 @@
           </q-card>
         </q-dialog>
 
+        <!-- MODAL LIMPIAR TODO -->
         <q-dialog v-model="modalLimpiarTodo">
           <q-card class="bg-grey-9 text-white style-modal">
             <q-card-section class="bg-negative text-white text-h6 text-bold">
@@ -513,8 +541,57 @@ const formulario = ref({
 
 const marcas = [
   "Apple", "Samsung", "Xiaomi", "Motorola",
-  "Huawei", "Realme", "OPPO", "Honor"
+  "Huawei", "Realme", "OPPO", "Honor", "Vivo", "ZTE", "Infinix", "Tecno"
 ];
+
+const marcasFiltradas = ref(marcas);
+function filtrarMarcas(val, update) {
+  update(() => {
+    if (val === '') {
+      marcasFiltradas.value = marcas;
+    } else {
+      const needle = val.toLowerCase();
+      marcasFiltradas.value = marcas.filter(v => v.toLowerCase().indexOf(needle) > -1);
+    }
+  });
+}
+
+// Diccionario exacto de modelos por marca
+const modelosPorMarca = {
+  "Apple": ["iPhone 11", "iPhone 12", "iPhone 13", "iPhone 14", "iPhone 15", "iPhone 16", "iPhone SE", "iPhone X", "iPhone 8"],
+  "Samsung": ["Galaxy A14", "Galaxy A24", "Galaxy A34", "Galaxy A54", "Galaxy A55", "Galaxy S23", "Galaxy S24", "Galaxy A04s", "Galaxy A15", "Galaxy S22"],
+  "Xiaomi": ["Redmi Note 11", "Redmi Note 12", "Redmi Note 13", "Poco X5", "Poco X6", "Redmi 12", "Redmi 13C", "Poco M5", "Xiaomi 13"],
+  "Motorola": ["Moto G22", "Moto G32", "Moto G54", "Moto Edge 40", "Moto G14", "Moto G24", "Moto G84"],
+  "Huawei": ["P30 Lite", "Nova 9", "Y9 Prime", "P50 Pro", "Y7 Prime", "Nova 10"],
+  "Realme": ["Realme 9", "Realme 10", "Realme C55", "Realme C35", "Realme 11 Pro"],
+  "OPPO": ["Reno 7", "Reno 8", "A57", "A78", "A58", "Reno 10"],
+  "Honor": ["Honor X7", "Honor X8", "Honor 90", "Honor Magic5", "Honor X5"],
+  "Vivo": ["Vivo Y16", "Vivo Y27", "Vivo V25", "Vivo Y36"],
+  "ZTE": ["Blade V30", "Blade A52", "Blade V40"],
+  "Infinix": ["Hot 30", "Note 30", "Smart 7"],
+  "Tecno": ["Spark 10", "Camon 20", "Pova 5"]
+};
+
+const modelosFiltrados = ref([]);
+function filtrarModelos(val, update) {
+  update(() => {
+    const listaBase = (formulario.value.marca && modelosPorMarca[formulario.value.marca]) 
+      ? modelosPorMarca[formulario.value.marca] 
+      : [];
+
+    if (val === '') {
+      modelosFiltrados.value = listaBase;
+    } else {
+      const needle = val.toLowerCase();
+      const filtrados = listaBase.filter(v => v.toLowerCase().indexOf(needle) > -1);
+      if (filtrados.length === 0 && val.trim() !== '') {
+        modelosFiltrados.value = [val]; 
+      } else {
+        modelosFiltrados.value = filtrados;
+      }
+    }
+  });
+}
 
 const preciosReparaciones = {
   "Cambio de pantalla": 150000,

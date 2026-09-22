@@ -1,10 +1,9 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-page-container>
-      <q-page class="q-pa-md bg-grey-10">
+      <q-page class="q-pa-md bg-dark">
 
-        <!-- CABECERA -->
-        <div class="q-mb-md bg-black text-amber-14 q-pa-md rounded-borders sombra borde">
+        <div class="q-mb-md bg-grey-9 text-amber-5 q-pa-md rounded-borders sombra borde">
           <div class="row items-center justify-between">
             <div>
               <div class="text-h4 text-bold">⚙️ TALLER DON EFRAÍN</div>
@@ -15,17 +14,16 @@
             </div>
 
             <div class="q-mt-sm-device row q-gutter-sm items-center">
-              <q-btn v-if="!esTecnico" label="LOGIN TÉCNICO" icon="lock" color="amber-14" text-color="black"
+              <q-btn v-if="!esTecnico" label="LOGIN TÉCNICO" icon="lock" color="amber-7" text-color="black"
                 class="text-bold" @click="modalLogin = true" />
               <q-btn v-else label="SALIR TÉCNICO" icon="logout" color="negative" class="text-bold" @click="cerrarSesionTecnico" />
             </div>
           </div>
         </div>
 
-        <!-- BOTÓN NUEVO EQUIPO Y CONTADOR -->
         <div class="row q-col-gutter-md q-mb-md items-center">
           <div class="col-12 col-md-8">
-            <q-btn label="INGRESAR NUEVO EQUIPO" icon="build" color="amber-14" text-color="black"
+            <q-btn label="INGRESAR NUEVO EQUIPO" icon="build" color="amber-7" text-color="black"
               class="full-width text-bold" size="lg" @click="abrirNuevo" />
           </div>
 
@@ -35,7 +33,7 @@
                 <span class="text-subtitle1 text-bold">
                   EQUIPOS EN TALLER
                 </span>
-                <q-badge color="orange-10" text-color="white" class="text-subtitle1 q-px-sm" :label="lista.length" />
+                <q-badge color="amber-9" text-color="black" class="text-subtitle1 text-bold q-px-sm" :label="lista.length" />
               </div>
 
               <q-btn v-if="esTecnico && lista.length > 0" label="BORRAR TODOS LOS PEDIDOS" icon="delete_sweep"
@@ -44,15 +42,13 @@
           </div>
         </div>
 
-        <!-- MENSAJE VACÍO -->
         <div v-if="lista.length === 0" class="text-center text-grey-5 q-pa-xl bg-grey-9 rounded-borders borde">
-          <q-icon name="handyman" size="4rem" color="amber-14" />
+          <q-icon name="handyman" size="4rem" color="amber-7" />
           <div class="text-h6 q-mt-sm text-bold">
             No hay trabajos registrados
           </div>
         </div>
 
-        <!-- LISTADO DE TARJETAS -->
         <div v-else class="row q-col-gutter-md">
           <div v-for="(item, index) in lista" :key="item.id" class="col-12 col-sm-6 col-md-4">
             <q-card class="bg-grey-9 text-white borde alto">
@@ -60,7 +56,7 @@
               <div :class="{
                 'bg-negative': item.estadoPago === 'Pendiente',
                 'bg-warning text-black': item.estadoPago === 'Abono',
-                'bg-positive': item.estadoPago === 'Pagado'
+                'bg-positive text-black': item.estadoPago === 'Pagado'
               }" class="q-pa-sm text-center text-bold text-uppercase">
                 PAGO: {{ item.estadoPago || "Sin definir" }}
                 <span v-if="item.estadoPago === 'Abono'">
@@ -72,7 +68,7 @@
 
               <q-card-section>
                 <div class="row items-center justify-between q-mb-sm">
-                  <div class="text-h6 text-bold text-amber-14">
+                  <div class="text-h6 text-bold text-amber-5">
                     {{ item.cliente || "Cliente sin nombre" }}
                   </div>
 
@@ -95,17 +91,16 @@
                   <b>Reparaciones / Fallos:</b>
                   <div v-if="Array.isArray(item.tipoReparacion) && item.tipoReparacion.length > 0"
                     class="q-mt-xs row q-gutter-xs">
-                    <q-chip v-for="(fallo, fIdx) in item.tipoReparacion" :key="fIdx" dense color="black"
-                      text-color="amber-14" class="text-weight-bold chip-personalizado">
+                    <q-chip v-for="(fallo, fIdx) in item.tipoReparacion" :key="fIdx" dense
+                      text-color="black" class="chip-personalizado">
                       {{ fallo }}
                     </q-chip>
                   </div>
                   <span v-else> {{ item.tipoReparacion || "Sin definir" }}</span>
                 </div>
 
-                <!-- MEJORAS EXTRA -->
-                <div v-if="item.mejorasExtra && item.mejorasExtra.length > 0" class="q-mt-md bg-black q-pa-sm rounded-borders borde">
-                  <div class="text-subtitle2 text-amber-14 text-bold">
+                <div v-if="item.mejorasExtra && item.mejorasExtra.length > 0" class="q-mt-md bg-grey-10 q-pa-sm rounded-borders borde">
+                  <div class="text-subtitle2 text-amber-5 text-bold">
                     🔧 Mejoras adicionales propuestas por el técnico:
                   </div>
                   <div v-for="(mejora, mIdx) in item.mejorasExtra" :key="mIdx" class="q-mt-xs text-body2">
@@ -116,16 +111,15 @@
                   </div>
                 </div>
 
-                <!-- PANEL APROBACIÓN CLIENTE -->
-                <div v-if="!esTecnico && item.mejorasExtra && item.mejorasExtra.length > 0 && item.estadoEquipo === 'Listo para entregar'" class="q-mt-md bg-blue-grey-10 q-pa-sm rounded-borders borde">
-                  <div class="text-subtitle2 text-amber-14 text-bold">
+                <div v-if="!esTecnico && item.mejorasExtra && item.mejorasExtra.length > 0 && item.estadoEquipo === 'Listo para entregar'" class="q-mt-md bg-grey-10 q-pa-sm rounded-borders borde">
+                  <div class="text-subtitle2 text-amber-5 text-bold">
                     👤 Panel de Aprobación (Vista Cliente)
                   </div>
                   <div class="text-caption text-grey-3 q-mb-sm">
                     Active el interruptor para aceptar la mejora adicional. Nota: Requiere pago total para poder activarlo.
                   </div>
                   
-                  <div v-for="(mejora, mIdx) in item.mejorasExtra" :key="mIdx" class="row items-center justify-between q-mt-xs bg-black q-pa-xs rounded-borders">
+                  <div v-for="(mejora, mIdx) in item.mejorasExtra" :key="mIdx" class="row items-center justify-between q-mt-xs bg-dark q-pa-xs rounded-borders">
                     <span class="text-body2">{{ mejora.descripcion }} - {{ formatoMoneda(mejora.costo) }}</span>
                     <q-toggle
                       :model-value="mejora.estado === 'Aceptado'"
@@ -143,15 +137,14 @@
                   </div>
                 </div>
 
-                <!-- AVISO DE RECOGIDA -->
-                <div v-if="!esTecnico && item.estadoEquipo === 'Listo para entregar'" class="q-mt-md bg-blue-grey-10 q-pa-sm rounded-borders borde">
-                  <div class="text-subtitle2 text-amber-14 text-bold">
+                <div v-if="!esTecnico && item.estadoEquipo === 'Listo para entregar'" class="q-mt-md bg-grey-10 q-pa-sm rounded-borders borde">
+                  <div class="text-subtitle2 text-amber-5 text-bold">
                     📦 Aviso de Recogida
                   </div>
                   <div class="text-caption text-grey-3 q-mb-sm">
                     Active este interruptor para confirmar al taller que pasará a recoger su equipo.
                   </div>
-                  <div class="row items-center justify-between bg-black q-pa-xs rounded-borders">
+                  <div class="row items-center justify-between bg-dark q-pa-xs rounded-borders">
                     <span class="text-body2 text-bold">¿Voy a recogerlo?</span>
                     <q-toggle
                       v-model="item.voyARecogerlo"
@@ -166,7 +159,7 @@
                 <div class="text-body1 q-mt-xs"><b>Técnico:</b> {{ item.tecnico || "Sin definir" }}</div>
                 <div class="text-body1"><b>Método de pago:</b> {{ item.metodoPago || "Sin definir" }}</div>
 
-                <div v-if="item.estadoPago === 'Abono'" class="q-mt-sm q-pa-xs rounded-borders bg-black text-white">
+                <div v-if="item.estadoPago === 'Abono'" class="q-mt-sm q-pa-xs rounded-borders bg-grey-10 text-white">
                   <div class="text-body1 text-warning">
                     <b>Abonado:</b> {{ formatoMoneda(item.abono) }}
                   </div>
@@ -176,17 +169,16 @@
                 </div>
 
                 <div v-if="item.observaciones"
-                  class="text-body1 q-mt-sm bg-black text-amber-5 q-pa-sm rounded-borders nota">
+                  class="text-body1 q-mt-sm bg-grey-10 text-amber-3 q-pa-sm rounded-borders nota">
                   <b>Observaciones:</b> {{ item.observaciones }}
                 </div>
 
-                <!-- CALIFICACIÓN -->
                 <div v-if="item.estadoEquipo === 'Entregado'"
-                  class="q-mt-md bg-black q-pa-sm rounded-borders text-center">
-                  <div class="text-subtitle2 text-bold text-amber-14">
+                  class="q-mt-md bg-grey-10 q-pa-sm rounded-borders text-center">
+                  <div class="text-subtitle2 text-bold text-amber-5">
                     ⭐ Calificación del cliente
                   </div>
-                  <q-rating v-model="item.calificacion" size="1.8em" color="amber-14" :readonly="esTecnico || item.calificacion > 0" :max="5" />
+                  <q-rating v-model="item.calificacion" size="1.8em" color="amber-5" :readonly="esTecnico || item.calificacion > 0" :max="5" />
                   <div v-if="!esTecnico && item.calificacion === 0" class="text-caption text-grey-4">
                     Haz clic en las estrellas para calificar
                   </div>
@@ -199,14 +191,14 @@
 
               <q-separator dark />
 
-              <q-card-actions v-if="item.estadoEquipo !== 'Entregado'" align="right" class="bg-black">
-                <q-btn v-if="esTecnico" flat color="amber-14" icon="edit" label="Editar / Mejorar" @click="abrirEditar(index)" />
+              <q-card-actions v-if="item.estadoEquipo !== 'Entregado'" align="right" class="bg-grey-10">
+                <q-btn v-if="esTecnico" flat color="amber-5" icon="edit" label="Editar / Mejorar" @click="abrirEditar(index)" />
                 <q-btn v-if="esTecnico" flat color="negative" icon="delete" label="Eliminar" @click="confirmarEliminar(index)" />
-                <span v-if="!esTecnico" class="text-amber-14 text-caption text-bold q-pa-xs">
+                <span v-if="!esTecnico" class="text-amber-5 text-caption text-bold q-pa-xs">
                   Modo Cliente: Solo lectura / Aprobaciones
                 </span>
               </q-card-actions>
-              <div v-else class="bg-black text-center q-pa-sm">
+              <div v-else class="bg-grey-10 text-center q-pa-sm">
                 <span class="text-positive text-bold text-caption">
                   ✓ REGISTRO CERRADO Y ENTREGADO
                 </span>
@@ -216,16 +208,15 @@
           </div>
         </div>
 
-        <!-- MODAL LOGIN TÉCNICO -->
         <q-dialog v-model="modalLogin">
           <q-card class="bg-grey-9 text-white style-modal">
-            <q-card-section class="bg-black text-amber-14 borde">
+            <q-card-section class="bg-grey-10 text-amber-5 borde">
               <div class="text-h6 text-bold">🔐 INGRESO MODO TÉCNICO</div>
             </q-card-section>
 
             <q-card-section class="q-pa-md">
               <q-input v-model="claveIngresada" :type="isPassword ? 'password' : 'text'" label="Contraseña" dark
-                outlined dense color="amber-14" @keyup.enter="verificarClave">
+                outlined dense color="amber-5" @keyup.enter="verificarClave">
                 <template v-slot:append>
                   <q-icon :name="isPassword ? 'visibility_off' : 'visibility'" class="cursor-pointer"
                     @click="isPassword = !isPassword" />
@@ -237,33 +228,31 @@
               </div>
             </q-card-section>
 
-            <q-card-actions align="right" class="bg-black">
+            <q-card-actions align="right" class="bg-grey-10">
               <q-btn flat label="Cancelar" color="grey-5" v-close-popup />
-              <q-btn flat label="Ingresar" color="amber-14" class="text-bold" @click="verificarClave" />
+              <q-btn flat label="Ingresar" color="amber-5" class="text-bold" @click="verificarClave" />
             </q-card-actions>
           </q-card>
         </q-dialog>
 
-        <!-- MODAL FORMULARIO (CREAR / EDITAR) -->
         <q-dialog v-model="modal">
           <q-card class="bg-grey-9 text-white formulario">
 
-            <q-card-section class="row items-center bg-black text-amber-14 borde">
+            <q-card-section class="row items-center bg-grey-10 text-amber-5 borde">
               <div class="text-h6 text-bold">
                 {{ editando ? "MODIFICAR / AGREGAR MEJORAS TÉCNICAS" : "REGISTRAR NUEVO EQUIPO" }}
               </div>
               <q-space />
-              <q-btn icon="close" flat round dense v-close-popup color="amber-14" />
+              <q-btn icon="close" flat round dense v-close-popup color="amber-5" />
             </q-card-section>
 
-            <q-card-section>
+            <q-card-section class="q-pa-lg">
               <q-form @submit.prevent="guardar">
 
-                <q-input v-model="formulario.cliente" label="Nombre del cliente *" dark outlined color="amber-14"
-                  class="q-mb-md" lazy-rules
+                <q-input v-model="formulario.cliente" label="Nombre del cliente *" dark outlined color="amber-5"
+                  class="q-mb-md input-grande" lazy-rules
                   :rules="[val => !!val && val.trim() !== '' || 'El nombre del cliente es obligatorio']" />
 
-                <!-- SELECTS DE MARCA Y MODELO FILTRADOS -->
                 <div class="row q-col-gutter-md">
                   <div class="col-12 col-sm-6">
                     <q-select 
@@ -272,7 +261,7 @@
                       label="Marca de celular *" 
                       dark 
                       outlined
-                      color="amber-14" 
+                      color="amber-5" 
                       use-input
                       input-debounce="0"
                       behavior="menu"
@@ -281,6 +270,7 @@
                       lazy-rules 
                       :rules="[val => !!val || 'Selecciona una marca']" 
                       @update:model-value="formulario.modelo = ''"
+                      class="input-grande"
                     />
                   </div>
 
@@ -291,7 +281,7 @@
                       label="Modelo de celular *" 
                       dark 
                       outlined 
-                      color="amber-14" 
+                      color="amber-5" 
                       use-input
                       input-debounce="0"
                       behavior="menu"
@@ -299,6 +289,7 @@
                       @focus="filtrarModelos('', (cb) => cb())"
                       lazy-rules
                       :rules="[val => !!val && String(val).trim() !== '' || 'Selecciona o escribe el modelo']" 
+                      class="input-grande"
                     />
                   </div>
                 </div>
@@ -306,8 +297,8 @@
                 <div class="row q-col-gutter-md q-mt-sm">
                   <div class="col-12 col-sm-6">
                     <q-select v-model="formulario.tipoReparacion" :options="reparaciones"
-                      label="Tipo de reparación (Múltiple) *" multiple use-chips dark outlined color="amber-14"
-                      class="chips-negros-input" option-value="value" option-label="label" emit-value map-options
+                      label="Tipo de reparación (Múltiple) *" multiple use-chips dark outlined color="amber-5"
+                      class="chips-compactos input-grande custom-select-reparacion" option-value="value" option-label="label" emit-value map-options
                       lazy-rules :rules="[val => (val && val.length > 0) || 'Selecciona al menos una reparación']"
                       @update:model-value="calcularPrecioAutomatico">
                       <template v-slot:option="{ itemProps, opt }">
@@ -316,7 +307,7 @@
                             <q-item-label>{{ opt.label }}</q-item-label>
                           </q-item-section>
                           <q-item-section side>
-                            <span class="text-amber-14 text-bold">{{ opt.precioTexto }}</span>
+                            <span class="text-amber-5 text-bold">{{ opt.precioTexto }}</span>
                           </q-item-section>
                         </q-item>
                       </template>
@@ -325,21 +316,20 @@
 
                   <div class="col-12 col-sm-6">
                     <q-select v-model="formulario.tecnico" :options="tecnicos" label="Técnico *" dark outlined
-                      color="amber-14" lazy-rules :rules="[val => !!val || 'Selecciona un técnico']" />
+                      color="amber-5" lazy-rules :rules="[val => !!val || 'Selecciona un técnico']" class="input-grande" />
                   </div>
                 </div>
 
                 <div v-if="formulario.tipoReparacion && formulario.tipoReparacion.includes('Otros')" class="q-mt-md">
-                  <q-input v-model="formulario.otroReparacion" label="Especificar otra reparación *" dark outlined color="amber-14" lazy-rules :rules="[val => !formulario.tipoReparacion.includes('Otros') || (!!val && val.trim() !== '') || 'Debe especificar el detalle de otros']" />
+                  <q-input v-model="formulario.otroReparacion" label="Especificar otra reparación *" dark outlined color="amber-5" class="input-grande" lazy-rules :rules="[val => !formulario.tipoReparacion.includes('Otros') || (!!val && val.trim() !== '') || 'Debe especificar el detalle de otros']" />
                 </div>
 
                 <div v-if="formulario.tipoReparacion && formulario.tipoReparacion.includes('Otros')" class="q-mt-md">
-                  <q-input :model-value="formatoPrecioOtroInput" label="Precio de la reparación personalizada *" prefix="$" dark outlined color="amber-14" @update:model-value="actualizarPrecioOtro" />
+                  <q-input :model-value="formatoPrecioOtroInput" label="Precio de la reparación personalizada *" prefix="$" dark outlined color="amber-5" class="input-grande" @update:model-value="actualizarPrecioOtro" />
                 </div>
 
-                <!-- SECCIÓN MEJORAS ADICIONALES (SI ESTÁ EDITANDO) -->
-                <div v-if="editando" class="q-mt-md bg-black q-pa-md rounded-borders borde">
-                  <div class="text-subtitle2 text-amber-14 text-bold q-mb-sm">
+                <div v-if="editando" class="q-mt-md bg-grey-10 q-pa-md rounded-borders borde">
+                  <div class="text-subtitle2 text-amber-5 text-bold q-mb-sm">
                     ➕ Agregar Nuevas Mejoras o Elementos Encontrados (Técnico)
                   </div>
                   
@@ -354,8 +344,8 @@
                         dark 
                         outlined 
                         dense 
-                        color="amber-14"
-                        class="chips-negros-input"
+                        color="amber-5"
+                        class="chips-compactos input-grande"
                         option-value="value" 
                         option-label="label" 
                         emit-value 
@@ -368,7 +358,7 @@
                               <q-item-label>{{ opt.label }}</q-item-label>
                             </q-item-section>
                             <q-item-section side>
-                              <span class="text-amber-14 text-bold">{{ opt.precioTexto }}</span>
+                              <span class="text-amber-5 text-bold">{{ opt.precioTexto }}</span>
                             </q-item-section>
                           </q-item>
                         </template>
@@ -377,22 +367,22 @@
                   </div>
 
                   <div v-if="nuevaMejoraSeleccion && nuevaMejoraSeleccion.includes('Otros')" class="q-mt-md">
-                    <q-input v-model="nuevaMejoraTextoPersonalizado" label="Especificar otra mejora adicional *" dark outlined dense color="amber-14" />
+                    <q-input v-model="nuevaMejoraTextoPersonalizado" label="Especificar otra mejora adicional *" dark outlined dense color="amber-5" class="input-grande" />
                   </div>
 
                   <div v-if="nuevaMejoraSeleccion && nuevaMejoraSeleccion.includes('Otros')" class="q-mt-md">
-                    <q-input :model-value="formatoCostoMejoraOtroInput" label="Costo de la mejora personalizada *" prefix="$" dark outlined dense color="amber-14" @update:model-value="actualizarCostoMejoraOtro" />
+                    <q-input :model-value="formatoCostoMejoraOtroInput" label="Costo de la mejora personalizada *" prefix="$" dark outlined dense color="amber-5" class="input-grande" @update:model-value="actualizarCostoMejoraOtro" />
                   </div>
 
                   <div class="row justify-end q-mt-md">
-                    <q-btn label="Añadir Mejoras Seleccionadas" color="amber-14" text-color="black" class="text-bold" @click="agregarMejorasExtra" />
+                    <q-btn label="Añadir Mejoras Seleccionadas" color="amber-7" text-color="black" class="text-bold" @click="agregarMejorasExtra" />
                   </div>
                 </div>
 
                 <div class="row q-col-gutter-md q-mt-sm">
                   <div class="col-12 col-sm-6">
                     <q-input :model-value="formatoPrecioInput" label="Precio *" prefix="$" dark outlined
-                      color="amber-14" lazy-rules @update:model-value="actualizarPrecio" :rules="[
+                      color="amber-5" class="input-grande" lazy-rules @update:model-value="actualizarPrecio" :rules="[
                         val => (formulario.precio !== null && formulario.precio !== '' && formulario.precio !== undefined) || 'El precio es obligatorio',
                         val => formulario.precio >= 0 || 'El precio debe ser un número positivo'
                       ]" />
@@ -400,28 +390,28 @@
 
                   <div class="col-12 col-sm-6">
                     <q-select v-model="formulario.metodoPago" :options="metodos" label="Método de pago *" dark outlined
-                      color="amber-14" lazy-rules :rules="[val => !!val || 'Selecciona un método de pago']" />
+                      color="amber-5" class="input-grande" lazy-rules :rules="[val => !!val || 'Selecciona un método de pago']" />
                   </div>
                 </div>
 
                 <div class="row q-col-gutter-md q-mt-sm">
                   <div class="col-12 col-sm-6">
                     <q-select v-model="formulario.estadoPago" :options="estadosPago" label="Estado del pago *" dark
-                      outlined color="amber-14" lazy-rules :rules="[val => !!val || 'Selecciona el estado del pago']"
+                      outlined color="amber-5" class="input-grande" lazy-rules :rules="[val => !!val || 'Selecciona el estado del pago']"
                       @update:model-value="validarEstadoEquipoConPago" />
                   </div>
 
                   <div class="col-12 col-sm-6">
-                    <q-select v-if="!editando" model-value="Recibido" label="Estado del equipo" dark outlined color="amber-14" disable />
+                    <q-select v-if="!editando" model-value="Recibido" label="Estado del equipo" dark outlined color="amber-5" class="input-grande" disable />
                     <q-select v-else v-model="formulario.estadoEquipo" :options="opcionesEstadoEquipoFiltradas"
-                      label="Estado del equipo *" dark outlined color="amber-14" lazy-rules :rules="[
+                      label="Estado del equipo *" dark outlined color="amber-5" class="input-grande" lazy-rules :rules="[
                         val => !!val || 'Selecciona el estado del equipo',
                         val => (val !== 'Entregado' || formulario.estadoPago === 'Pagado') || 'No se puede entregar si no está totalmente Pagado',
                         val => (val !== 'Listo para entregar' || permitirDarListo) || 'El cliente aún no ha revisado/aceptado todas las mejoras propuestas.',
                         val => !esFaseAnterior(val) || 'No está permitido regresar el equipo a una fase anterior.',
                         val => (val !== 'Entregado' || formulario.voyARecogerlo) || 'El cliente debe activar el switch de que va a recoger el equipo antes de marcarlo como Entregado.'
                       ]" />
-                    <div v-if="!editando" class="text-caption text-amber-5 q-mt-xs">
+                    <div v-if="!editando" class="text-caption text-amber-4 q-mt-xs">
                       ℹ️ Todo equipo ingresa inicialmente como 'Recibido'.
                     </div>
                     <div v-else-if="!permitirDarListo" class="text-caption text-negative q-mt-xs">
@@ -432,7 +422,7 @@
 
                 <div v-if="formulario.estadoPago === 'Abono'" class="q-mt-md">
                   <q-input :model-value="formatoAbonoInput" label="Valor del abono *" prefix="$" dark outlined
-                    color="amber-14" lazy-rules @update:model-value="actualizarAbono" :rules="[
+                    color="amber-5" class="input-grande" lazy-rules @update:model-value="actualizarAbono" :rules="[
                       val => (formulario.abono !== null && formulario.abono !== '' && formulario.abono !== undefined) || 'Ingresa el valor del abono',
                       val => formulario.abono > 0 || 'El abono debe ser mayor a 0',
                       val => formulario.abono < formulario.precio || 'El abono debe ser menor al precio total'
@@ -440,12 +430,12 @@
                 </div>
 
                 <q-input v-model="formulario.observaciones" label="Observaciones" type="textarea" rows="3" dark outlined
-                  color="amber-14" class="q-mt-md" />
+                  color="amber-5" class="q-mt-md input-grande" />
 
-                <div class="row justify-end q-mt-lg">
-                  <q-btn label="Cancelar" color="grey-6" flat v-close-popup class="q-mr-sm" />
-                  <q-btn :label="editando ? 'Actualizar' : 'Guardar'" type="submit" color="amber-14" text-color="black"
-                    class="text-bold" />
+                <div class="row justify-end q-mt-lg q-gutter-sm">
+                  <q-btn label="Cancelar" color="grey-6" flat v-close-popup size="md" />
+                  <q-btn :label="editando ? 'Actualizar' : 'Guardar'" type="submit" color="amber-7" text-color="black"
+                    class="text-bold px-md" size="md" />
                 </div>
 
               </q-form>
@@ -454,7 +444,6 @@
           </q-card>
         </q-dialog>
 
-        <!-- MODAL ELIMINAR -->
         <q-dialog v-model="eliminar">
           <q-card class="bg-grey-9 text-white style-modal">
             <q-card-section class="bg-negative text-white text-h6">
@@ -465,14 +454,13 @@
               ¿Deseas eliminar este registro?
             </q-card-section>
 
-            <q-card-actions align="right" class="bg-black">
+            <q-card-actions align="right" class="bg-grey-10">
               <q-btn flat label="Cancelar" color="grey-5" v-close-popup />
               <q-btn flat label="Eliminar" color="negative" class="text-bold" @click="eliminarRegistro" />
             </q-card-actions>
           </q-card>
         </q-dialog>
 
-        <!-- MODAL LIMPIAR TODO -->
         <q-dialog v-model="modalLimpiarTodo">
           <q-card class="bg-grey-9 text-white style-modal">
             <q-card-section class="bg-negative text-white text-h6 text-bold">
@@ -483,7 +471,7 @@
               ¿Estás seguro de que deseas eliminar <b>TODOS</b> los pedidos registrados?
             </q-card-section>
 
-            <q-card-actions align="right" class="bg-black">
+            <q-card-actions align="right" class="bg-grey-10">
               <q-btn flat label="Cancelar" color="grey-5" v-close-popup />
               <q-btn flat label="Sí, borrar todo" color="negative" class="text-bold" @click="vaciarLista" />
             </q-card-actions>
@@ -556,7 +544,6 @@ function filtrarMarcas(val, update) {
   });
 }
 
-// Diccionario exacto de modelos por marca
 const modelosPorMarca = {
   "Apple": ["iPhone 11", "iPhone 12", "iPhone 13", "iPhone 14", "iPhone 15", "iPhone 16", "iPhone SE", "iPhone X", "iPhone 8"],
   "Samsung": ["Galaxy A14", "Galaxy A24", "Galaxy A34", "Galaxy A54", "Galaxy A55", "Galaxy S23", "Galaxy S24", "Galaxy A04s", "Galaxy A15", "Galaxy S22"],
@@ -956,12 +943,13 @@ function iconoEstado(estado) {
 
 <style scoped>
 .borde {
-  border: 1px solid #424242;
+  border: 1px solid #3d3d3d;
   border-bottom: 3px solid #ffb300;
+  box-shadow: 0 0 10px rgba(255, 179, 0, 0.15);
 }
 
 .sombra {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 179, 0, 0.08);
 }
 
 .alto {
@@ -974,7 +962,7 @@ function iconoEstado(estado) {
 
 .formulario {
   width: 100%;
-  max-width: 700px;
+  max-width: 750px;
 }
 
 .style-modal {
@@ -982,7 +970,35 @@ function iconoEstado(estado) {
   max-width: 400px;
 }
 
-.chip-personalizado {
-  border: 1px solid #ffb300;
+.chip-personalizado,
+.custom-select-reparacion :deep(.q-chip),
+.chips-compactos :deep(.q-chip),
+.q-dialog :deep(.q-chip) {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-weight: normal !important;
+  font-size: 1.1rem !important;
+  border: 1px solid #cccccc !important;
+  box-shadow: none !important;
+}
+
+.chip-personalizado *,
+.custom-select-reparacion :deep(.q-chip) *,
+.chips-compactos :deep(.q-chip) *,
+.q-dialog :deep(.q-chip) * {
+  color: #000000 !important;
+}
+
+.chips-compactos :deep(.q-field__control) {
+  min-height: 56px !important;
+  height: auto !important;
+  padding-bottom: 6px !important;
+  padding-top: 6px !important;
+}
+
+.input-grande :deep(.q-field__native),
+.input-grande :deep(.q-field__input),
+.input-grande :deep(.q-field__label) {
+  font-size: 1.05rem !important;
 }
 </style>

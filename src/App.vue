@@ -8,19 +8,15 @@
             <div>
               <div class="text-h4 text-bold">⚙️ TALLER DON EFRAÍN</div>
               <div class="text-subtitle1 text-grey-4 text-weight-bold">
-                SISTEMA DE SERVICIO TÉCNICO
+                SISTEMA DE SERVICIO TÉCNICO Y CONTROL DE CLIENTE
+                <span class="q-ml-md text-amber-4">({{ esTecnico ? 'MODO TÉCNICO' : 'MODO CLIENTE' }})</span>
               </div>
             </div>
 
-            <div class="q-mt-sm-device">
-              <q-chip v-if="esTecnico" color="positive" text-color="white" icon="admin_panel_settings"
-                class="text-bold q-mr-sm">
-                TÉCNICO ACTIVO
-              </q-chip>
-
-              <q-btn v-if="!esTecnico" label="MODO TÉCNICO" icon="lock" color="amber-14" text-color="black"
+            <div class="q-mt-sm-device row q-gutter-sm items-center">
+              <q-btn v-if="!esTecnico" label="LOGIN TÉCNICO" icon="lock" color="amber-14" text-color="black"
                 class="text-bold" @click="modalLogin = true" />
-              <q-btn v-else label="SALIR" icon="logout" color="negative" class="text-bold" @click="esTecnico = false" />
+              <q-btn v-else label="SALIR TÉCNICO" icon="logout" color="negative" class="text-bold" @click="cerrarSesionTecnico" />
             </div>
           </div>
         </div>
@@ -103,6 +99,66 @@
                   <span v-else> {{ item.tipoReparacion || "Sin definir" }}</span>
                 </div>
 
+                <!-- SECCIÓN DE MEJORAS EXTRA -->
+                <div v-if="item.mejorasExtra && item.mejorasExtra.length > 0" class="q-mt-md bg-black q-pa-sm rounded-borders borde">
+                  <div class="text-subtitle2 text-amber-14 text-bold">
+                    🔧 Mejoras adicionales propuestas por el técnico:
+                  </div>
+                  <div v-for="(mejora, mIdx) in item.mejorasExtra" :key="mIdx" class="q-mt-xs text-body2">
+                    • {{ mejora.descripcion }} ({{ formatoMoneda(mejora.costo) }})
+                    <q-chip dense :color="mejora.estado === 'Aceptado' ? 'positive' : mejora.estado === 'Rechazado' ? 'negative' : 'warning'" text-color="white" class="q-ml-sm text-bold">
+                      {{ mejora.estado }}
+                    </q-chip>
+                  </div>
+                </div>
+
+                <!-- PANEL DE VISTO BUENO / APROBACIÓN DEL CLIENTE CON SWITCH -->
+                <div v-if="!esTecnico && item.mejorasExtra && item.mejorasExtra.length > 0 && item.estadoEquipo === 'Listo para entregar'" class="q-mt-md bg-blue-grey-10 q-pa-sm rounded-borders borde">
+                  <div class="text-subtitle2 text-amber-14 text-bold">
+                    👤 Panel de Aprobación (Vista Cliente)
+                  </div>
+                  <div class="text-caption text-grey-3 q-mb-sm">
+                    Active el interruptor para aceptar la mejora adicional. Nota: Requiere pago total para poder activarlo.
+                  </div>
+                  
+                  <div v-for="(mejora, mIdx) in item.mejorasExtra" :key="mIdx" class="row items-center justify-between q-mt-xs bg-black q-pa-xs rounded-borders">
+                    <span class="text-body2">{{ mejora.descripcion }} - {{ formatoMoneda(mejora.costo) }}</span>
+                    <q-toggle
+                      :model-value="mejora.estado === 'Aceptado'"
+                      @update:model-value="(val) => cambiarEstadoSwitchMejora(index, mIdx, val)"
+                      :disable="item.estadoPago !== 'Pagado'"
+                      color="positive"
+                      dark
+                      keep-color
+                      :label="mejora.estado === 'Aceptado' ? 'Aceptado' : 'Rechazado'"
+                    />
+                  </div>
+
+                  <div v-if="item.estadoPago !== 'Pagado'" class="text-negative text-caption q-mt-xs text-bold">
+                    ⚠️ Los interruptores están desactivados porque el equipo no tiene el pago completamente realizado ("Pagado").
+                  </div>
+                </div>
+
+                <!-- SWITCH DE AVISO DE RECOGIDA PARA EL CLIENTE (CUANDO ESTÁ LISTO PARA ENTREGAR) -->
+                <div v-if="!esTecnico && item.estadoEquipo === 'Listo para entregar'" class="q-mt-md bg-blue-grey-10 q-pa-sm rounded-borders borde">
+                  <div class="text-subtitle2 text-amber-14 text-bold">
+                    📦 Aviso de Recogida
+                  </div>
+                  <div class="text-caption text-grey-3 q-mb-sm">
+                    Active este interruptor para confirmar al taller que pasará a recoger su equipo.
+                  </div>
+                  <div class="row items-center justify-between bg-black q-pa-xs rounded-borders">
+                    <span class="text-body2 text-bold">¿Voy a recogerlo?</span>
+                    <q-toggle
+                      v-model="item.voyARecogerlo"
+                      color="positive"
+                      dark
+                      keep-color
+                      :label="item.voyARecogerlo ? 'Sí, voy en camino' : 'No confirmado'"
+                    />
+                  </div>
+                </div>
+
                 <div class="text-body1 q-mt-xs"><b>Técnico:</b> {{ item.tecnico || "Sin definir" }}</div>
                 <div class="text-body1"><b>Método de pago:</b> {{ item.metodoPago || "Sin definir" }}</div>
 
@@ -130,7 +186,7 @@
                     Haz clic en las estrellas para calificar
                   </div>
                   <div v-if="esTecnico" class="text-caption text-grey-5 q-mt-xs">
-                    🔒 Los técnicos no pueden calificar los servicios.
+                    🔒 Cierre sesión de técnico para calificar como cliente.
                   </div>
                 </div>
 
@@ -139,8 +195,11 @@
               <q-separator dark />
 
               <q-card-actions v-if="item.estadoEquipo !== 'Entregado'" align="right" class="bg-black">
-                <q-btn flat color="amber-14" icon="edit" label="Editar" @click="abrirEditar(index)" />
-                <q-btn flat color="negative" icon="delete" label="Eliminar" @click="confirmarEliminar(index)" />
+                <q-btn v-if="esTecnico" flat color="amber-14" icon="edit" label="Editar / Mejorar" @click="abrirEditar(index)" />
+                <q-btn v-if="esTecnico" flat color="negative" icon="delete" label="Eliminar" @click="confirmarEliminar(index)" />
+                <span v-if="!esTecnico" class="text-amber-14 text-caption text-bold q-pa-xs">
+                  Modo Cliente: Solo lectura / Aprobaciones
+                </span>
               </q-card-actions>
               <div v-else class="bg-black text-center q-pa-sm">
                 <span class="text-positive text-bold text-caption">
@@ -152,6 +211,7 @@
           </div>
         </div>
 
+        <!-- MODAL DE LOGIN TÉCNICO -->
         <q-dialog v-model="modalLogin">
           <q-card class="bg-grey-9 text-white style-modal">
             <q-card-section class="bg-black text-amber-14 borde">
@@ -168,7 +228,7 @@
               </q-input>
 
               <div v-if="errorClave" class="text-negative text-caption q-mt-xs text-bold">
-                ⚠️ Contraseña incorrecta. LA CONTRASEÑA ES {{ CLAVE_TECNICO }}
+                ⚠️ Contraseña incorrecta. (Contraseña: hola)
               </div>
             </q-card-section>
 
@@ -179,12 +239,13 @@
           </q-card>
         </q-dialog>
 
+        <!-- MODAL DE FORMULARIO -->
         <q-dialog v-model="modal">
           <q-card class="bg-grey-9 text-white formulario">
 
             <q-card-section class="row items-center bg-black text-amber-14 borde">
               <div class="text-h6 text-bold">
-                {{ editando ? "MODIFICAR REGISTRO" : "REGISTRAR TRABAJO" }}
+                {{ editando ? "MODIFICAR / AGREGAR MEJORAS TÉCNICAS" : "REGISTRAR NUEVO EQUIPO" }}
               </div>
               <q-space />
               <q-btn icon="close" flat round dense v-close-popup color="amber-14" />
@@ -204,10 +265,15 @@
                   </div>
 
                   <div class="col-12 col-sm-6">
-                    <q-select v-model="formulario.modelo" :options="opcionesModeloFiltradas" label="Modelo *" dark
-                      outlined use-input fill-input hide-selected input-debounce="0" color="amber-14" lazy-rules
-                      :rules="[val => !!val && val.trim() !== '' || 'Escribe o selecciona el modelo']"
-                      @filter="filtrarModelos" @new-value="crearNuevoModelo" />
+                    <q-input 
+                      v-model="formulario.modelo" 
+                      label="Modelo *" 
+                      dark 
+                      outlined 
+                      color="amber-14" 
+                      lazy-rules
+                      :rules="[val => !!val && String(val).trim() !== '' || 'Escribe el modelo del equipo']" 
+                    />
                   </div>
                 </div>
 
@@ -245,6 +311,58 @@
                   <q-input :model-value="formatoPrecioOtroInput" label="Precio de la reparación personalizada *" prefix="$" dark outlined color="amber-14" @update:model-value="actualizarPrecioOtro" />
                 </div>
 
+                <!-- SECCIÓN EXCLUSIVA EDICIÓN: EL TÉCNICO AGREGA NUEVAS MEJORAS CON SELECTOR MÚLTIPLE -->
+                <div v-if="editando" class="q-mt-md bg-black q-pa-md rounded-borders borde">
+                  <div class="text-subtitle2 text-amber-14 text-bold q-mb-sm">
+                    ➕ Agregar Nuevas Mejoras o Elementos Encontrados (Técnico)
+                  </div>
+                  
+                  <div class="row q-col-gutter-sm">
+                    <div class="col-12">
+                      <q-select 
+                        v-model="nuevaMejoraSeleccion" 
+                        :options="reparacionesDisponiblesParaMejora" 
+                        label="Seleccionar mejoras adicionales *" 
+                        multiple 
+                        use-chips
+                        dark 
+                        outlined 
+                        dense 
+                        color="amber-14"
+                        class="chips-negros-input"
+                        option-value="value" 
+                        option-label="label" 
+                        emit-value 
+                        map-options
+                        @update:model-value="actualizarMontoYCamposMejoras"
+                      >
+                        <template v-slot:option="{ itemProps, opt }">
+                          <q-item v-bind="itemProps" class="text-white bg-grey-9">
+                            <q-item-section>
+                              <q-item-label>{{ opt.label }}</q-item-label>
+                            </q-item-section>
+                            <q-item-section side>
+                              <span class="text-amber-14 text-bold">{{ opt.precioTexto }}</span>
+                            </q-item-section>
+                          </q-item>
+                        </template>
+                      </q-select>
+                    </div>
+                  </div>
+
+                  <div v-if="nuevaMejoraSeleccion && nuevaMejoraSeleccion.includes('Otros')" class="q-mt-md">
+                    <q-input v-model="nuevaMejoraTextoPersonalizado" label="Especificar otra mejora adicional *" dark outlined dense color="amber-14" />
+                  </div>
+
+                  <div v-if="nuevaMejoraSeleccion && nuevaMejoraSeleccion.includes('Otros')" class="q-mt-md">
+                    <q-input :model-value="formatoCostoMejoraOtroInput" label="Costo de la mejora personalizada *" prefix="$" dark outlined dense color="amber-14" @update:model-value="actualizarCostoMejoraOtro" />
+                  </div>
+
+                  <div class="row justify-end q-mt-md">
+                    <q-btn label="Añadir Mejoras Seleccionadas" color="amber-14" text-color="black" class="text-bold" @click="agregarMejorasExtra" />
+                  </div>
+                </div>
+
                 <div class="row q-col-gutter-md q-mt-sm">
                   <div class="col-12 col-sm-6">
                     <q-input :model-value="formatoPrecioInput" label="Precio *" prefix="$" dark outlined
@@ -268,16 +386,20 @@
                   </div>
 
                   <div class="col-12 col-sm-6">
-                    <q-select v-model="formulario.estadoEquipo" :options="opcionesEstadoEquipoFiltradas"
+                    <q-select v-if="!editando" model-value="Recibido" label="Estado del equipo" dark outlined color="amber-14" disable />
+                    <q-select v-else v-model="formulario.estadoEquipo" :options="opcionesEstadoEquipoFiltradas"
                       label="Estado del equipo *" dark outlined color="amber-14" lazy-rules :rules="[
                         val => !!val || 'Selecciona el estado del equipo',
-                        val => (val !== 'Entregado' || formulario.estadoPago === 'Pagado') || 'No se puede entregar si no está totalmente Pagado'
+                        val => (val !== 'Entregado' || formulario.estadoPago === 'Pagado') || 'No se puede entregar si no está totalmente Pagado',
+                        val => (val !== 'Listo para entregar' || permitirDarListo) || 'El cliente aún no ha revisado/aceptado todas las mejoras propuestas.',
+                        val => !esFaseAnterior(val) || 'No está permitido regresar el equipo a una fase anterior.',
+                        val => (val !== 'Entregado' || formulario.voyARecogerlo) || 'El cliente debe activar el switch de que va a recoger el equipo antes de marcarlo como Entregado.'
                       ]" />
-                    <div v-if="!esTecnico" class="text-caption text-amber-5 q-mt-xs">
-                      🔒 Se requiere Modo Técnico para marcar como 'Entregado'.
+                    <div v-if="!editando" class="text-caption text-amber-5 q-mt-xs">
+                      ℹ️ Todo equipo ingresa inicialmente como 'Recibido'.
                     </div>
-                    <div v-else-if="formulario.estadoPago !== 'Pagado'" class="text-caption text-negative q-mt-xs">
-                      ⚠️ Debe estar completamente 'Pagado' para marcar como 'Entregado'.
+                    <div v-else-if="!permitirDarListo" class="text-caption text-negative q-mt-xs">
+                      ⚠️ Hay mejoras pendientes por revisar por parte del cliente. No se puede poner 'Listo para entregar'.
                     </div>
                   </div>
                 </div>
@@ -289,10 +411,6 @@
                       val => formulario.abono > 0 || 'El abono debe ser mayor a 0',
                       val => formulario.abono < formulario.precio || 'El abono debe ser menor al precio total'
                     ]" />
-                  <div v-if="formulario.precio && formulario.abono > 0 && formulario.abono < formulario.precio"
-                    class="text-caption text-warning q-mt-xs text-bold">
-                    💡 Saldo Faltante: {{ formatoMoneda(formulario.precio - formulario.abono) }}
-                  </div>
                 </div>
 
                 <q-input v-model="formulario.observaciones" label="Observaciones" type="textarea" rows="3" dark outlined
@@ -334,8 +452,7 @@
             </q-card-section>
 
             <q-card-section class="text-body1">
-              ¿Estás seguro de que deseas eliminar <b>TODOS</b> los pedidos registrados? Esta acción borrará la lista
-              por completo y no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar <b>TODOS</b> los pedidos registrados?
             </q-card-section>
 
             <q-card-actions align="right" class="bg-black">
@@ -354,7 +471,7 @@
 import { ref, computed } from "vue";
 import { useLocalStorage } from "@vueuse/core";
 
-const lista = useLocalStorage("taller_don_efrain", []);
+const lista = useLocalStorage("taller_don_efrain_v2", []);
 const esTecnico = useLocalStorage("taller_don_efrain_es_tecnico", false);
 
 const CLAVE_TECNICO = "hola";
@@ -370,6 +487,10 @@ const claveIngresada = ref("");
 const isPassword = ref(true);
 const errorClave = ref(false);
 
+const nuevaMejoraSeleccion = ref([]);
+const nuevaMejoraCostoOtro = ref(0);
+const nuevaMejoraTextoPersonalizado = ref("");
+
 const formulario = ref({
   cliente: "",
   marca: null,
@@ -377,12 +498,14 @@ const formulario = ref({
   tipoReparacion: [],
   otroReparacion: "",
   precioOtro: 0,
+  mejorasExtra: [],
   tecnico: null,
   precio: null,
   metodoPago: null,
   estadoPago: null,
   abono: null,
   estadoEquipo: "Recibido",
+  voyARecogerlo: false,
   calificacion: 0,
   observaciones: "",
   fechaHora: ""
@@ -393,15 +516,6 @@ const marcas = [
   "Huawei", "Realme", "OPPO", "Honor"
 ];
 
-const modelosSugeridos = [
-  "iPhone 11", "iPhone 12", "iPhone 13", "iPhone 14", "iPhone 15",
-  "Galaxy S20", "Galaxy S21", "Galaxy S22", "Galaxy A54", "Galaxy A34",
-  "Redmi Note 11", "Redmi Note 12", "Poco X5", "Moto G84", "Moto E13"
-];
-
-const opcionesModeloFiltradas = ref(modelosSugeridos);
-
-// Precios predeterminados por tipo de reparación
 const preciosReparaciones = {
   "Cambio de pantalla": 150000,
   "Cambio de batería": 80000,
@@ -421,6 +535,11 @@ const reparaciones = [
   { label: "Otros", value: "Otros", precioTexto: "Variable" }
 ];
 
+const reparacionesDisponiblesParaMejora = computed(() => {
+  const seleccionadasPrincipal = formulario.value.tipoReparacion || [];
+  return reparaciones.filter(rep => !seleccionadasPrincipal.includes(rep.value));
+});
+
 const tecnicos = [
   "Don Efraín", "Omar Leonardo Dangond Rueda", "Javier Esneider Pinto Rodríguez"
 ];
@@ -429,57 +548,43 @@ const metodos = ["Efectivo", "Transferencia", "Tarjeta"];
 const estadosPago = ["Pagado", "Pendiente", "Abono"];
 const estadosEquipo = ["Recibido", "En reparación", "Listo para entregar", "Entregado"];
 
-function filtrarModelos(val, update) {
-  update(() => {
-    if (val === "") {
-      opcionesModeloFiltradas.value = modelosSugeridos;
-    } else {
-      const needle = val.toLowerCase();
-      opcionesModeloFiltradas.value = modelosSugeridos.filter(
-        v => v.toLowerCase().indexOf(needle) > -1
-      );
-    }
-  });
+function verificarClave() {
+  if (claveIngresada.value === CLAVE_TECNICO) {
+    esTecnico.value = true;
+    modalLogin.value = false;
+    claveIngresada.value = "";
+    errorClave.value = false;
+    isPassword.value = true;
+  } else {
+    errorClave.value = true;
+  }
 }
 
-function crearNuevoModelo(val, done) {
-  if (val.length > 0) {
-    done(val, "add-unique");
-  }
+function cerrarSesionTecnico() {
+  esTecnico.value = false;
 }
 
 function formatearNumeroTexto(valor) {
   if (valor === null || valor === undefined || valor === "" || isNaN(valor)) return "";
-
   let numStr = Math.round(valor).toString();
   let partes = [];
-
   while (numStr.length > 3) {
     partes.unshift(numStr.slice(-3));
     numStr = numStr.slice(0, -3);
   }
   partes.unshift(numStr);
-
   if (partes.length >= 3) {
     const millones = partes.slice(0, partes.length - 2).join(",");
     const resto = partes.slice(partes.length - 2).join(".");
     return `${millones},${resto}`;
   }
-
   return partes.join(".");
 }
 
-const formatoPrecioInput = computed(() => {
-  return formatearNumeroTexto(formulario.value.precio);
-});
-
-const formatoAbonoInput = computed(() => {
-  return formatearNumeroTexto(formulario.value.abono);
-});
-
-const formatoPrecioOtroInput = computed(() => {
-  return formatearNumeroTexto(formulario.value.precioOtro);
-});
+const formatoPrecioInput = computed(() => formatearNumeroTexto(formulario.value.precio));
+const formatoAbonoInput = computed(() => formatearNumeroTexto(formulario.value.abono));
+const formatoPrecioOtroInput = computed(() => formatearNumeroTexto(formulario.value.precioOtro));
+const formatoCostoMejoraOtroInput = computed(() => formatearNumeroTexto(nuevaMejoraCostoOtro.value));
 
 function actualizarPrecio(val) {
   const soloNumeros = val ? val.replace(/\D/g, "") : "";
@@ -497,6 +602,18 @@ function actualizarPrecioOtro(val) {
   calcularPrecioAutomatico();
 }
 
+function actualizarCostoMejoraOtro(val) {
+  const soloNumeros = val ? val.replace(/\D/g, "") : "";
+  nuevaMejoraCostoOtro.value = soloNumeros ? parseInt(soloNumeros, 10) : 0;
+}
+
+function actualizarMontoYCamposMejoras() {
+  if (!nuevaMejoraSeleccion.value || !nuevaMejoraSeleccion.value.includes('Otros')) {
+    nuevaMejoraTextoPersonalizado.value = "";
+    nuevaMejoraCostoOtro.value = 0;
+  }
+}
+
 function calcularPrecioAutomatico() {
   let total = 0;
   if (formulario.value.tipoReparacion && Array.isArray(formulario.value.tipoReparacion)) {
@@ -509,32 +626,62 @@ function calcularPrecioAutomatico() {
   if (formulario.value.tipoReparacion && formulario.value.tipoReparacion.includes('Otros')) {
     total += Number(formulario.value.precioOtro || 0);
   }
+  if (formulario.value.mejorasExtra) {
+    formulario.value.mejorasExtra.forEach(m => {
+      total += Number(m.costo || 0);
+    });
+  }
   formulario.value.precio = total > 0 ? total : null;
 }
 
 function formatoMoneda(valor) {
   if (valor === null || valor === undefined || valor === "" || isNaN(valor)) return "$0";
-
   let numStr = Math.round(valor).toString();
   let partes = [];
-
   while (numStr.length > 3) {
     partes.unshift(numStr.slice(-3));
     numStr = numStr.slice(0, -3);
   }
   partes.unshift(numStr);
-
   if (partes.length >= 3) {
     const millones = partes.slice(0, partes.length - 2).join(",");
     const resto = partes.slice(partes.length - 2).join(".");
     return `$${millones},${resto}`;
   }
-
   return `$${partes.join(".")}`;
 }
 
+const permitirDarListo = computed(() => {
+  if (!formulario.value.mejorasExtra || formulario.value.mejorasExtra.length === 0) return true;
+  const hayPendientes = formulario.value.mejorasExtra.some(m => m.estado === "Pendiente");
+  return !hayPendientes;
+});
+
+function esFaseAnterior(estadoObjetivo) {
+  if (posicion.value === null || posicion.value === undefined) return false;
+  const estadoOriginal = lista.value[posicion.value]?.estadoEquipo;
+  const ordenFases = {
+    "Recibido": 1,
+    "En reparación": 2,
+    "Listo para entregar": 3,
+    "Entregado": 4
+  };
+  return (ordenFases[estadoObjetivo] || 0) < (ordenFases[estadoOriginal] || 0);
+}
+
 const opcionesEstadoEquipoFiltradas = computed(() => {
-  let opciones = [...estadosEquipo];
+  if (posicion.value === null || posicion.value === undefined) return estadosEquipo;
+  const estadoOriginal = lista.value[posicion.value]?.estadoEquipo || "Recibido";
+  const ordenFases = {
+    "Recibido": 1,
+    "En reparación": 2,
+    "Listo para entregar": 3,
+    "Entregado": 4
+  };
+  const nivelActual = ordenFases[estadoOriginal] || 1;
+
+  let opciones = estadosEquipo.filter(e => (ordenFases[e] || 0) >= nivelActual);
+
   if (!esTecnico.value || formulario.value.estadoPago !== "Pagado") {
     opciones = opciones.filter(e => e !== "Entregado");
   }
@@ -547,15 +694,52 @@ function validarEstadoEquipoConPago(nuevoEstadoPago) {
   }
 }
 
-function verificarClave() {
-  if (claveIngresada.value === CLAVE_TECNICO) {
-    esTecnico.value = true;
-    modalLogin.value = false;
-    claveIngresada.value = "";
-    errorClave.value = false;
-    isPassword.value = true;
-  } else {
-    errorClave.value = true;
+function agregarMejorasExtra() {
+  if (!nuevaMejoraSeleccion.value || nuevaMejoraSeleccion.value.length === 0) return;
+
+  if (!formulario.value.mejorasExtra) {
+    formulario.value.mejorasExtra = [];
+  }
+
+  nuevaMejoraSeleccion.value.forEach(sel => {
+    if (sel === "Otros") {
+      if (nuevaMejoraTextoPersonalizado.value && nuevaMejoraTextoPersonalizado.value.trim() !== "") {
+        formulario.value.mejorasExtra.push({
+          descripcion: nuevaMejoraTextoPersonalizado.value.trim(),
+          costo: Number(nuevaMejoraCostoOtro.value || 0),
+          estado: "Pendiente"
+        });
+      }
+    } else {
+      let costoPredefinido = preciosReparaciones[sel] || 0;
+      formulario.value.mejorasExtra.push({
+        descripcion: sel,
+        costo: costoPredefinido,
+        estado: "Pendiente"
+      });
+    }
+  });
+
+  calcularPrecioAutomatico();
+  nuevaMejoraSeleccion.value = [];
+  nuevaMejoraCostoOtro.value = 0;
+  nuevaMejoraTextoPersonalizado.value = "";
+}
+
+function cambiarEstadoSwitchMejora(indexItem, indexMejora, valorSwitch) {
+  const item = lista.value[indexItem];
+  if (item && item.mejorasExtra && item.mejorasExtra[indexMejora]) {
+    const nuevoEstado = valorSwitch ? "Aceptado" : "Rechazado";
+    const estadoAnterior = item.mejorasExtra[indexMejora].estado;
+    const costoMejora = Number(item.mejorasExtra[indexMejora].costo || 0);
+
+    item.mejorasExtra[indexMejora].estado = nuevoEstado;
+
+    if (estadoAnterior === "Aceptado" && nuevoEstado === "Rechazado") {
+      item.precio = Math.max(0, (item.precio || 0) - costoMejora);
+    } else if (estadoAnterior === "Rechazado" && nuevoEstado === "Aceptado") {
+      item.precio = (item.precio || 0) + costoMejora;
+    }
   }
 }
 
@@ -567,12 +751,14 @@ function nuevoFormulario() {
     tipoReparacion: [],
     otroReparacion: "",
     precioOtro: 0,
+    mejorasExtra: [],
     tecnico: null,
     precio: null,
     metodoPago: null,
     estadoPago: null,
     abono: null,
     estadoEquipo: "Recibido",
+    voyARecogerlo: false,
     calificacion: 0,
     observaciones: "",
     fechaHora: new Date().toLocaleString("es-CO")
@@ -583,6 +769,7 @@ function abrirNuevo() {
   editando.value = false;
   posicion.value = null;
   formulario.value = nuevoFormulario();
+  formulario.value.estadoEquipo = "Recibido";
   modal.value = true;
 }
 
@@ -591,22 +778,16 @@ function abrirEditar(index) {
 
   editando.value = true;
   posicion.value = index;
+  nuevaMejoraSeleccion.value = [];
+  nuevaMejoraCostoOtro.value = 0;
+  nuevaMejoraTextoPersonalizado.value = "";
 
   const datos = JSON.parse(JSON.stringify(lista.value[index]));
+  if (!datos.mejorasExtra) datos.mejorasExtra = [];
   if (typeof datos.tipoReparacion === 'string') {
     datos.tipoReparacion = [datos.tipoReparacion];
   } else if (!Array.isArray(datos.tipoReparacion)) {
     datos.tipoReparacion = [];
-  }
-
-  const listaBaseNombres = ["Cambio de pantalla", "Cambio de batería", "Cambio de pin de carga", "Liberación", "Mantenimiento de software", "Cambio de flex"];
-  let customIndex = datos.tipoReparacion.findIndex(r => !listaBaseNombres.includes(r) && r !== "Otros");
-  if (customIndex !== -1) {
-    datos.otroReparacion = datos.tipoReparacion[customIndex];
-    datos.tipoReparacion[customIndex] = "Otros";
-  } else {
-    datos.otroReparacion = "";
-    datos.precioOtro = 0;
   }
 
   formulario.value = datos;
@@ -619,6 +800,10 @@ function guardar() {
   }
   if (formulario.value.modelo) {
     formulario.value.modelo = formulario.value.modelo.trim();
+  }
+
+  if (!editando.value) {
+    formulario.value.estadoEquipo = "Recibido";
   }
 
   if (formulario.value.estadoPago !== "Abono") {
@@ -662,10 +847,7 @@ function confirmarEliminar(index) {
 }
 
 function eliminarRegistro() {
-  if (
-    posicion.value !== null &&
-    lista.value[posicion.value].estadoEquipo !== "Entregado"
-  ) {
+  if (posicion.value !== null && lista.value[posicion.value].estadoEquipo !== "Entregado") {
     lista.value.splice(posicion.value, 1);
   }
   eliminar.value = false;
@@ -723,7 +905,6 @@ function iconoEstado(estado) {
   max-width: 400px;
 }
 
-/* Estilo personalizado para forzar el fondo negro y letras ámbar legibles en los chips múltiples */
 .chip-personalizado {
   border: 1px solid #ffb300;
 }
